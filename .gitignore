@@ -3,3 +3,6 @@
 *.svg
 cover.out
 *.test
+.idea
+*.iml
+.DS_Store

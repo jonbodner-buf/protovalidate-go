@@ -464,6 +464,12 @@ func (bldr *builder) processStandardRules(
 		}
 	}
 
+	// Try native Go evaluators for known simple rules before falling back to CEL.
+	if native := bldr.tryNativeRules(fdesc, rules, valEval); native != nil {
+		valEval.Append(native)
+		return nil
+	}
+
 	stdRules, err := bldr.rules.Build(
 		bldr.env,
 		fdesc,
@@ -480,6 +486,34 @@ func (bldr *builder) processStandardRules(
 		programSet: stdRules,
 	})
 	return nil
+}
+
+func (bldr *builder) tryNativeRules(
+	fdesc protoreflect.FieldDescriptor,
+	rules *validate.FieldRules,
+	valEval *value,
+) evaluator {
+	if rules == nil {
+		return nil
+	}
+	// When processWrapperRules unwraps a wrapper type (e.g., Int32Value),
+	// it calls buildValue with the inner scalar field descriptor but
+	// attaches the resulting evaluators to the outer value. At runtime,
+	// the evaluator receives the wrapper message, not the inner scalar,
+	// so native evaluators that call val.Int() would panic. The outer
+	// value's Descriptor still points to the wrapper message field, so
+	// we use its Kind to detect this case and fall back to CEL.
+	if valEval.Descriptor != nil &&
+		(valEval.Descriptor.Kind() == protoreflect.MessageKind ||
+			valEval.Descriptor.Kind() == protoreflect.GroupKind) {
+		return nil
+	}
+	switch fdesc.Kind() {
+	case protoreflect.Int32Kind:
+		return tryBuildNativeInt32Rules(newBase(valEval), rules.GetInt32())
+	default:
+		return nil
+	}
 }
 
 func (bldr *builder) processAnyRules(

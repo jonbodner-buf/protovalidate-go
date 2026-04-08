@@ -52,6 +52,8 @@ type BenchGT struct {
 	Gteltein      int32                  `protobuf:"varint,10,opt,name=gteltein,proto3" json:"gteltein,omitempty"`
 	Gteltex       int32                  `protobuf:"varint,11,opt,name=gteltex,proto3" json:"gteltex,omitempty"`
 	Gtelteex      int32                  `protobuf:"varint,12,opt,name=gtelteex,proto3" json:"gtelteex,omitempty"`
+	Const         int32                  `protobuf:"varint,13,opt,name=const,proto3" json:"const,omitempty"`
+	Constgt       int32                  `protobuf:"varint,14,opt,name=constgt,proto3" json:"constgt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -165,6 +167,20 @@ func (x *BenchGT) GetGtelteex() int32 {
 	return 0
 }
 
+func (x *BenchGT) GetConst() int32 {
+	if x != nil {
+		return x.Const
+	}
+	return 0
+}
+
+func (x *BenchGT) GetConstgt() int32 {
+	if x != nil {
+		return x.Constgt
+	}
+	return 0
+}
+
 func (x *BenchGT) SetGt(v int32) {
 	x.Gt = v
 }
@@ -213,6 +229,14 @@ func (x *BenchGT) SetGtelteex(v int32) {
 	x.Gtelteex = v
 }
 
+func (x *BenchGT) SetConst(v int32) {
+	x.Const = v
+}
+
+func (x *BenchGT) SetConstgt(v int32) {
+	x.Constgt = v
+}
+
 type BenchGT_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
@@ -228,6 +252,8 @@ type BenchGT_builder struct {
 	Gteltein int32
 	Gteltex  int32
 	Gtelteex int32
+	Const    int32
+	Constgt  int32
 }
 
 func (b0 BenchGT_builder) Build() *BenchGT {
@@ -246,6 +272,8 @@ func (b0 BenchGT_builder) Build() *BenchGT {
 	x.Gteltein = b.Gteltein
 	x.Gteltex = b.Gteltex
 	x.Gtelteex = b.Gtelteex
+	x.Const = b.Const
+	x.Constgt = b.Constgt
 	return m0
 }
 
@@ -253,7 +281,7 @@ var File_tests_example_v1_refactor_proto protoreflect.FileDescriptor
 
 const file_tests_example_v1_refactor_proto_rawDesc = "" +
 	"\n" +
-	"\x1ftests/example/v1/refactor.proto\x12\x10tests.example.v1\x1a\x1bbuf/validate/validate.proto\x1a\x17gofakeit/gofakeit.proto\"\xc5\x05\n" +
+	"\x1ftests/example/v1/refactor.proto\x12\x10tests.example.v1\x1a\x1bbuf/validate/validate.proto\x1a\x17gofakeit/gofakeit.proto\"\xb5\x06\n" +
 	"\aBenchGT\x12-\n" +
 	"\x02gt\x18\x01 \x01(\x05B\x1d\xbaH\x04\x1a\x02 \x00\xca\xe66\x12\x12\x10{intrange:1,100}R\x02gt\x12/\n" +
 	"\x03gte\x18\x02 \x01(\x05B\x1d\xbaH\x04\x1a\x02(\x00\xca\xe66\x12\x12\x10{intrange:1,100}R\x03gte\x12-\n" +
@@ -267,7 +295,11 @@ const file_tests_example_v1_refactor_proto_rawDesc = "" +
 	"\bgteltein\x18\n" +
 	" \x01(\x05B\x1f\xbaH\x06\x1a\x04\x10e(\x00\xca\xe66\x12\x12\x10{intrange:1,100}R\bgteltein\x12B\n" +
 	"\agteltex\x18\v \x01(\x05B(\xbaH\x0f\x1a\r\x10\xec\xff\xff\xff\xff\xff\xff\xff\xff\x01(\x00\xca\xe66\x12\x12\x10{intrange:1,100}R\agteltex\x12D\n" +
-	"\bgtelteex\x18\f \x01(\x05B(\xbaH\x0f\x1a\r\x18\xec\xff\xff\xff\xff\xff\xff\xff\xff\x01(\x00\xca\xe66\x12\x12\x10{intrange:1,100}R\bgtelteexB\xcb\x01\n" +
+	"\bgtelteex\x18\f \x01(\x05B(\xbaH\x0f\x1a\r\x18\xec\xff\xff\xff\xff\xff\xff\xff\xff\x01(\x00\xca\xe66\x12\x12\x10{intrange:1,100}R\bgtelteex\x123\n" +
+	"\x05const\x18\r \x01(\x05B\x1d\xbaH\x04\x1a\x02\b\n" +
+	"\xca\xe66\x12\x12\x10{intrange:10,10}R\x05const\x129\n" +
+	"\aconstgt\x18\x0e \x01(\x05B\x1f\xbaH\x06\x1a\x04\b\n" +
+	"(\x00\xca\xe66\x12\x12\x10{intrange:10,10}R\aconstgtB\xcb\x01\n" +
 	"\x14com.tests.example.v1B\rRefactorProtoP\x01ZBbuf.build/go/protovalidate/internal/gen/tests/example/v1;examplev1\xa2\x02\x03TEX\xaa\x02\x10Tests.Example.V1\xca\x02\x10Tests\\Example\\V1\xe2\x02\x1cTests\\Example\\V1\\GPBMetadata\xea\x02\x12Tests::Example::V1b\x06proto3"
 
 var file_tests_example_v1_refactor_proto_msgTypes = make([]protoimpl.MessageInfo, 1)

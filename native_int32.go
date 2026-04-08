@@ -24,12 +24,13 @@ import (
 
 //nolint:gochecknoglobals
 var (
-	int32RuleDescriptor = fieldRulesDesc.Fields().ByName("int32")
-	int32RulesDesc      = (&validate.Int32Rules{}).ProtoReflect().Descriptor()
-	int32GtDescriptor   = int32RulesDesc.Fields().ByName("gt")
-	int32GteDescriptor  = int32RulesDesc.Fields().ByName("gte")
-	int32LtDescriptor   = int32RulesDesc.Fields().ByName("lt")
-	int32LteDescriptor  = int32RulesDesc.Fields().ByName("lte")
+	int32RuleDescriptor  = fieldRulesDesc.Fields().ByName("int32")
+	int32RulesDesc       = (&validate.Int32Rules{}).ProtoReflect().Descriptor()
+	int32GtDescriptor    = int32RulesDesc.Fields().ByName("gt")
+	int32GteDescriptor   = int32RulesDesc.Fields().ByName("gte")
+	int32LtDescriptor    = int32RulesDesc.Fields().ByName("lt")
+	int32LteDescriptor   = int32RulesDesc.Fields().ByName("lte")
+	int32ConstDescriptor = int32RulesDesc.Fields().ByName("const")
 )
 
 // lowerBound describes which lower bound constraint is active.
@@ -57,10 +58,11 @@ const (
 // with direct Go comparisons.
 type nativeInt32Compare struct {
 	base
-	lo    int32      // lower bound value (gt or gte threshold)
-	lower lowerBound // gt (exclusive) or gte (inclusive)
-	hi    int32      // upper bound value (lt or lte threshold)
-	upper upperBound // none, lt, or lte
+	lo       int32      // lower bound value (gt or gte threshold)
+	lower    lowerBound // gt (exclusive) or gte (inclusive)
+	hi       int32      // upper bound value (lt or lte threshold)
+	upper    upperBound // none, lt, or lte
+	constVal *int32     // constant value for comparison
 }
 
 // belowLo reports whether v violates the lower bound.
@@ -113,7 +115,7 @@ func (n nativeInt32Compare) ltRulePrefix() string {
 	return "int32.lte"
 }
 
-func (n nativeInt32Compare) rule() string {
+func (n nativeInt32Compare) gtltRule() string {
 	if n.lower != lowerBoundNone {
 		prefix := n.gtRulePrefix()
 		switch n.upper {
@@ -158,17 +160,33 @@ func (n nativeInt32Compare) Evaluate(_ protoreflect.Message, val protoreflect.Va
 	// this will always be an int32, no concern about overflow.
 	int32Val := int32(val.Int()) //nolint:gosec
 
+	// const support
+	if n.constVal != nil {
+		if int32Val != *n.constVal {
+			return n.violationErr(
+				"int32.const",
+				fmt.Sprintf("value must equal %d", *n.constVal),
+				val,
+				int32ConstDescriptor,
+				*n.constVal,
+			)
+		}
+	}
+
 	/*
 		considerations:
 		- normal range or not
 		- gt/gte set
 		- lt/lte set
 	*/
+	if n.lower == lowerBoundNone && n.upper == upperBoundNone {
+		return nil
+	}
 	switch {
 	case n.lower == lowerBoundNone:
 		if n.aboveHi(int32Val) {
 			return n.violationErr(
-				n.rule(),
+				n.gtltRule(),
 				"value must be "+n.hiMessage(),
 				val,
 				n.hiDesc(),
@@ -178,7 +196,7 @@ func (n nativeInt32Compare) Evaluate(_ protoreflect.Message, val protoreflect.Va
 	case n.upper == upperBoundNone:
 		if n.belowLo(int32Val) {
 			return n.violationErr(
-				n.rule(),
+				n.gtltRule(),
 				"value must be "+n.loMessage(),
 				val,
 				n.loDesc(),
@@ -194,7 +212,7 @@ func (n nativeInt32Compare) Evaluate(_ protoreflect.Message, val protoreflect.Va
 		}
 		if failure {
 			return n.violationErr(
-				n.rule(),
+				n.gtltRule(),
 				fmt.Sprintf("value must be %s %s %s", n.loMessage(), n.conjunction(), n.hiMessage()),
 				val,
 				n.loDesc(),
@@ -248,7 +266,7 @@ func tryBuildNativeInt32Rules(
 	if rules == nil {
 		return nil
 	}
-	if rules.HasConst() || len(rules.GetIn()) > 0 || len(rules.GetNotIn()) > 0 {
+	if len(rules.GetIn()) > 0 || len(rules.GetNotIn()) > 0 {
 		return nil
 	}
 	// Bail out if the rules message has unknown fields, which indicate
@@ -257,15 +275,19 @@ func tryBuildNativeInt32Rules(
 		return nil
 	}
 
+	hasRule := false
+
 	var lowerValue int32
 	lower := lowerBoundNone
 	switch {
 	case rules.HasGt():
 		lower = lowerBoundGt
 		lowerValue = rules.GetGt()
+		hasRule = true
 	case rules.HasGte():
 		lower = lowerBoundGte
 		lowerValue = rules.GetGte()
+		hasRule = true
 	}
 
 	var upperValue int32
@@ -274,21 +296,32 @@ func tryBuildNativeInt32Rules(
 	case rules.HasLt():
 		upper = upperBoundLt
 		upperValue = rules.GetLt()
+		hasRule = true
 	case rules.HasLte():
 		upper = upperBoundLte
 		upperValue = rules.GetLte()
+		hasRule = true
 	}
 
-	// if we got here and don't have any bounds, we can't handle this.
-	if lower == lowerBoundNone && upper == upperBoundNone {
+	var constVal *int32
+	if rules.HasConst() {
+		constVal = ptr(rules.GetConst())
+		hasRule = true
+	}
+
+	// if we got here and don't have any bounds or const, we can't handle this.
+	if !hasRule {
 		return nil
 	}
 
 	return nativeInt32Compare{
-		base:  base,
-		lo:    lowerValue,
-		lower: lower,
-		hi:    upperValue,
-		upper: upper,
+		base:     base,
+		lo:       lowerValue,
+		lower:    lower,
+		hi:       upperValue,
+		upper:    upper,
+		constVal: constVal,
 	}
 }
+
+func ptr[T any](v T) *T { return &v }

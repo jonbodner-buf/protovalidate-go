@@ -215,7 +215,6 @@ func TestTryBuildNativeInt32Rules_ReturnsNil(t *testing.T) {
 		rules *validate.Int32Rules
 	}{
 		{"nil_rules", nil},
-		{"const", validate.Int32Rules_builder{Const: proto.Int32(5)}.Build()},
 		{"in", validate.Int32Rules_builder{In: []int32{1, 2, 3}}.Build()},
 		{"not_in", validate.Int32Rules_builder{NotIn: []int32{1, 2, 3}}.Build()},
 	}

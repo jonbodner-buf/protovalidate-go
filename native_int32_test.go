@@ -53,6 +53,22 @@ func TestNativeInt32Compare(t *testing.T) {
 			fail:   []int32{4},
 			ruleID: "int32.gte",
 		},
+		// lt=5: pass {6}, fail {4, 5}
+		{
+			name:   "lt_only",
+			rules:  validate.Int32Rules_builder{Lt: proto.Int32(5)}.Build(),
+			pass:   []int32{4},
+			fail:   []int32{5, 6},
+			ruleID: "int32.lt",
+		},
+		// lte=5: pass {5, 6}, fail {4}
+		{
+			name:   "lte_only",
+			rules:  validate.Int32Rules_builder{Lte: proto.Int32(5)}.Build(),
+			pass:   []int32{4, 5},
+			fail:   []int32{6},
+			ruleID: "int32.lte",
+		},
 		// gt=0, lt=10: pass {1, 9}, fail {-1, 0, 10, 11}
 		{
 			name:   "gt_lt",
@@ -157,7 +173,7 @@ func TestNativeInt32Compare(t *testing.T) {
 			require.NotNil(t, eval)
 			for _, v := range tt.pass {
 				err := eval.Evaluate(nil, protoreflect.ValueOfInt32(v), &validationConfig{})
-				assert.NoError(t, err, "expected %d to pass", v)
+				require.NoError(t, err, "expected %d to pass", v)
 			}
 			for _, v := range tt.fail {
 				err := eval.Evaluate(nil, protoreflect.ValueOfInt32(v), &validationConfig{})
@@ -202,8 +218,6 @@ func TestTryBuildNativeInt32Rules_ReturnsNil(t *testing.T) {
 		{"const", validate.Int32Rules_builder{Const: proto.Int32(5)}.Build()},
 		{"in", validate.Int32Rules_builder{In: []int32{1, 2, 3}}.Build()},
 		{"not_in", validate.Int32Rules_builder{NotIn: []int32{1, 2, 3}}.Build()},
-		{"lt_only", validate.Int32Rules_builder{Lt: proto.Int32(10)}.Build()},
-		{"lte_only", validate.Int32Rules_builder{Lte: proto.Int32(10)}.Build()},
 	}
 
 	for _, tt := range tests {
@@ -271,7 +285,7 @@ func TestNativeInt32_EndToEnd(t *testing.T) {
 
 	passing := dynamicpb.NewMessage(msgType.Descriptor())
 	passing.Set(msgType.Descriptor().Fields().ByName("value"), protoreflect.ValueOfInt32(1))
-	assert.NoError(t, validator.Validate(passing))
+	require.NoError(t, validator.Validate(passing))
 
 	failing := dynamicpb.NewMessage(msgType.Descriptor())
 	failing.Set(msgType.Descriptor().Fields().ByName("value"), protoreflect.ValueOfInt32(0))

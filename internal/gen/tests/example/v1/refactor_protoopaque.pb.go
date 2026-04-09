@@ -39,23 +39,25 @@ const (
 )
 
 type BenchGT struct {
-	state               protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Gt       int32                  `protobuf:"varint,1,opt,name=gt,proto3"`
-	xxx_hidden_Gte      int32                  `protobuf:"varint,2,opt,name=gte,proto3"`
-	xxx_hidden_Lt       int32                  `protobuf:"varint,3,opt,name=lt,proto3"`
-	xxx_hidden_Lte      int32                  `protobuf:"varint,4,opt,name=lte,proto3"`
-	xxx_hidden_Gtltin   int32                  `protobuf:"varint,5,opt,name=gtltin,proto3"`
-	xxx_hidden_Gtltein  int32                  `protobuf:"varint,6,opt,name=gtltein,proto3"`
-	xxx_hidden_Gtltex   int32                  `protobuf:"varint,7,opt,name=gtltex,proto3"`
-	xxx_hidden_Gtlteex  int32                  `protobuf:"varint,8,opt,name=gtlteex,proto3"`
-	xxx_hidden_Gteltin  int32                  `protobuf:"varint,9,opt,name=gteltin,proto3"`
-	xxx_hidden_Gteltein int32                  `protobuf:"varint,10,opt,name=gteltein,proto3"`
-	xxx_hidden_Gteltex  int32                  `protobuf:"varint,11,opt,name=gteltex,proto3"`
-	xxx_hidden_Gtelteex int32                  `protobuf:"varint,12,opt,name=gtelteex,proto3"`
-	xxx_hidden_Const    int32                  `protobuf:"varint,13,opt,name=const,proto3"`
-	xxx_hidden_Constgt  int32                  `protobuf:"varint,14,opt,name=constgt,proto3"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	state                protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Gt        int32                  `protobuf:"varint,1,opt,name=gt,proto3"`
+	xxx_hidden_Gte       int32                  `protobuf:"varint,2,opt,name=gte,proto3"`
+	xxx_hidden_Lt        int32                  `protobuf:"varint,3,opt,name=lt,proto3"`
+	xxx_hidden_Lte       int32                  `protobuf:"varint,4,opt,name=lte,proto3"`
+	xxx_hidden_Gtltin    int32                  `protobuf:"varint,5,opt,name=gtltin,proto3"`
+	xxx_hidden_Gtltein   int32                  `protobuf:"varint,6,opt,name=gtltein,proto3"`
+	xxx_hidden_Gtltex    int32                  `protobuf:"varint,7,opt,name=gtltex,proto3"`
+	xxx_hidden_Gtlteex   int32                  `protobuf:"varint,8,opt,name=gtlteex,proto3"`
+	xxx_hidden_Gteltin   int32                  `protobuf:"varint,9,opt,name=gteltin,proto3"`
+	xxx_hidden_Gteltein  int32                  `protobuf:"varint,10,opt,name=gteltein,proto3"`
+	xxx_hidden_Gteltex   int32                  `protobuf:"varint,11,opt,name=gteltex,proto3"`
+	xxx_hidden_Gtelteex  int32                  `protobuf:"varint,12,opt,name=gtelteex,proto3"`
+	xxx_hidden_Const     int32                  `protobuf:"varint,13,opt,name=const,proto3"`
+	xxx_hidden_Constgt   int32                  `protobuf:"varint,14,opt,name=constgt,proto3"`
+	xxx_hidden_InTest    int32                  `protobuf:"varint,15,opt,name=in_test,json=inTest,proto3"`
+	xxx_hidden_NotInTest int32                  `protobuf:"varint,16,opt,name=not_in_test,json=notInTest,proto3"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *BenchGT) Reset() {
@@ -181,6 +183,20 @@ func (x *BenchGT) GetConstgt() int32 {
 	return 0
 }
 
+func (x *BenchGT) GetInTest() int32 {
+	if x != nil {
+		return x.xxx_hidden_InTest
+	}
+	return 0
+}
+
+func (x *BenchGT) GetNotInTest() int32 {
+	if x != nil {
+		return x.xxx_hidden_NotInTest
+	}
+	return 0
+}
+
 func (x *BenchGT) SetGt(v int32) {
 	x.xxx_hidden_Gt = v
 }
@@ -237,23 +253,33 @@ func (x *BenchGT) SetConstgt(v int32) {
 	x.xxx_hidden_Constgt = v
 }
 
+func (x *BenchGT) SetInTest(v int32) {
+	x.xxx_hidden_InTest = v
+}
+
+func (x *BenchGT) SetNotInTest(v int32) {
+	x.xxx_hidden_NotInTest = v
+}
+
 type BenchGT_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
-	Gt       int32
-	Gte      int32
-	Lt       int32
-	Lte      int32
-	Gtltin   int32
-	Gtltein  int32
-	Gtltex   int32
-	Gtlteex  int32
-	Gteltin  int32
-	Gteltein int32
-	Gteltex  int32
-	Gtelteex int32
-	Const    int32
-	Constgt  int32
+	Gt        int32
+	Gte       int32
+	Lt        int32
+	Lte       int32
+	Gtltin    int32
+	Gtltein   int32
+	Gtltex    int32
+	Gtlteex   int32
+	Gteltin   int32
+	Gteltein  int32
+	Gteltex   int32
+	Gtelteex  int32
+	Const     int32
+	Constgt   int32
+	InTest    int32
+	NotInTest int32
 }
 
 func (b0 BenchGT_builder) Build() *BenchGT {
@@ -274,6 +300,8 @@ func (b0 BenchGT_builder) Build() *BenchGT {
 	x.xxx_hidden_Gtelteex = b.Gtelteex
 	x.xxx_hidden_Const = b.Const
 	x.xxx_hidden_Constgt = b.Constgt
+	x.xxx_hidden_InTest = b.InTest
+	x.xxx_hidden_NotInTest = b.NotInTest
 	return m0
 }
 
@@ -281,7 +309,7 @@ var File_tests_example_v1_refactor_proto protoreflect.FileDescriptor
 
 const file_tests_example_v1_refactor_proto_rawDesc = "" +
 	"\n" +
-	"\x1ftests/example/v1/refactor.proto\x12\x10tests.example.v1\x1a\x1bbuf/validate/validate.proto\x1a\x17gofakeit/gofakeit.proto\"\xb5\x06\n" +
+	"\x1ftests/example/v1/refactor.proto\x12\x10tests.example.v1\x1a\x1bbuf/validate/validate.proto\x1a\x17gofakeit/gofakeit.proto\"\xb0\a\n" +
 	"\aBenchGT\x12-\n" +
 	"\x02gt\x18\x01 \x01(\x05B\x1d\xbaH\x04\x1a\x02 \x00\xca\xe66\x12\x12\x10{intrange:1,100}R\x02gt\x12/\n" +
 	"\x03gte\x18\x02 \x01(\x05B\x1d\xbaH\x04\x1a\x02(\x00\xca\xe66\x12\x12\x10{intrange:1,100}R\x03gte\x12-\n" +
@@ -299,7 +327,9 @@ const file_tests_example_v1_refactor_proto_rawDesc = "" +
 	"\x05const\x18\r \x01(\x05B\x1d\xbaH\x04\x1a\x02\b\n" +
 	"\xca\xe66\x12\x12\x10{intrange:10,10}R\x05const\x129\n" +
 	"\aconstgt\x18\x0e \x01(\x05B\x1f\xbaH\x06\x1a\x04\b\n" +
-	"(\x00\xca\xe66\x12\x12\x10{intrange:10,10}R\aconstgtB\xcb\x01\n" +
+	"(\x00\xca\xe66\x12\x12\x10{intrange:10,10}R\aconstgt\x128\n" +
+	"\ain_test\x18\x0f \x01(\x05B\x1f\xbaH\b\x1a\x060\x010\x030\x05\xca\xe66\x10\x12\x0e{intrange:3,3}R\x06inTest\x12?\n" +
+	"\vnot_in_test\x18\x10 \x01(\x05B\x1f\xbaH\b\x1a\x068\x018\x038\x05\xca\xe66\x10\x12\x0e{intrange:4,4}R\tnotInTestB\xcb\x01\n" +
 	"\x14com.tests.example.v1B\rRefactorProtoP\x01ZBbuf.build/go/protovalidate/internal/gen/tests/example/v1;examplev1\xa2\x02\x03TEX\xaa\x02\x10Tests.Example.V1\xca\x02\x10Tests\\Example\\V1\xe2\x02\x1cTests\\Example\\V1\\GPBMetadata\xea\x02\x12Tests::Example::V1b\x06proto3"
 
 var file_tests_example_v1_refactor_proto_msgTypes = make([]protoimpl.MessageInfo, 1)

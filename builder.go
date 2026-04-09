@@ -513,32 +513,34 @@ func (bldr *builder) tryNativeRules(
 			valEval.Descriptor.Kind() == protoreflect.GroupKind) {
 		return nil
 	}
-	b := newBase(valEval)
+	base := newBase(valEval)
 	switch fdesc.Kind() {
 	case protoreflect.Int32Kind:
-		return tryBuildNativeInt32Rules(b, rules.GetInt32())
+		return tryBuildNativeInt32Rules(base, rules.GetInt32())
 	case protoreflect.Sint32Kind:
-		return tryBuildNativeSint32Rules(b, rules.GetSint32())
+		return tryBuildNativeSint32Rules(base, rules.GetSint32())
 	case protoreflect.Sfixed32Kind:
-		return tryBuildNativeSfixed32Rules(b, rules.GetSfixed32())
+		return tryBuildNativeSfixed32Rules(base, rules.GetSfixed32())
 	case protoreflect.Int64Kind:
-		return tryBuildNativeInt64Rules(b, rules.GetInt64())
+		return tryBuildNativeInt64Rules(base, rules.GetInt64())
 	case protoreflect.Sint64Kind:
-		return tryBuildNativeSint64Rules(b, rules.GetSint64())
+		return tryBuildNativeSint64Rules(base, rules.GetSint64())
 	case protoreflect.Sfixed64Kind:
-		return tryBuildNativeSfixed64Rules(b, rules.GetSfixed64())
+		return tryBuildNativeSfixed64Rules(base, rules.GetSfixed64())
 	case protoreflect.Uint32Kind:
-		return tryBuildNativeUint32Rules(b, rules.GetUint32())
+		return tryBuildNativeUint32Rules(base, rules.GetUint32())
 	case protoreflect.Fixed32Kind:
-		return tryBuildNativeFixed32Rules(b, rules.GetFixed32())
+		return tryBuildNativeFixed32Rules(base, rules.GetFixed32())
 	case protoreflect.Uint64Kind:
-		return tryBuildNativeUint64Rules(b, rules.GetUint64())
+		return tryBuildNativeUint64Rules(base, rules.GetUint64())
 	case protoreflect.Fixed64Kind:
-		return tryBuildNativeFixed64Rules(b, rules.GetFixed64())
+		return tryBuildNativeFixed64Rules(base, rules.GetFixed64())
 	case protoreflect.FloatKind:
-		return tryBuildNativeFloatRules(b, rules.GetFloat())
+		return tryBuildNativeFloatRules(base, rules.GetFloat())
 	case protoreflect.DoubleKind:
-		return tryBuildNativeDoubleRules(b, rules.GetDouble())
+		return tryBuildNativeDoubleRules(base, rules.GetDouble())
+	case protoreflect.StringKind:
+		return tryBuildNativeStringRules(base, rules.GetString())
 	default:
 		return nil
 	}

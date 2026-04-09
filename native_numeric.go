@@ -32,6 +32,8 @@ type numericValue interface {
 
 // numericRules is satisfied by all generated numeric rules types
 // (Int32Rules, Int64Rules, UInt32Rules, etc.).
+//
+//nolint:interfacebloat
 type numericRules[T numericValue] interface {
 	HasGt() bool
 	GetGt() T
@@ -81,11 +83,11 @@ func makeNumericDescriptors(
 // numericTypeConfig holds all type-specific operations and metadata
 // for a single proto numeric kind.
 type numericTypeConfig[T numericValue] struct {
-	typeName      string                        // proto rule prefix: "int32", "sint32", "float", etc.
-	descs         numericDescriptors             // descriptor bundle for rule path construction
-	extractVal    func(protoreflect.Value) T     // val.Int/Uint/Float + cast
-	makeRuleVal   func(T) protoreflect.Value     // ValueOfInt32, ValueOfFloat32, etc.
-	nanFailsRange bool                           // true only for float32, float64
+	typeName      string                     // proto rule prefix: "int32", "sint32", "float", etc.
+	descs         numericDescriptors         // descriptor bundle for rule path construction
+	extractVal    func(protoreflect.Value) T // val.Int/Uint/Float + cast
+	makeRuleVal   func(T) protoreflect.Value // ValueOfInt32, ValueOfFloat32, etc.
+	nanFailsRange bool                       // true only for float32, float64
 }
 
 //nolint:gochecknoglobals
@@ -109,19 +111,19 @@ var (
 	int32Config = numericTypeConfig[int32]{
 		typeName:    "int32",
 		descs:       int32Descs,
-		extractVal:  func(v protoreflect.Value) int32 { return int32(v.Int()) }, //nolint:gosec
+		extractVal:  func(v protoreflect.Value) int32 { return int32(v.Int()) },
 		makeRuleVal: protoreflect.ValueOfInt32,
 	}
 	sint32Config = numericTypeConfig[int32]{
 		typeName:    "sint32",
 		descs:       sint32Descs,
-		extractVal:  func(v protoreflect.Value) int32 { return int32(v.Int()) }, //nolint:gosec
+		extractVal:  func(v protoreflect.Value) int32 { return int32(v.Int()) },
 		makeRuleVal: protoreflect.ValueOfInt32,
 	}
 	sfixed32Config = numericTypeConfig[int32]{
 		typeName:    "sfixed32",
 		descs:       sfixed32Descs,
-		extractVal:  func(v protoreflect.Value) int32 { return int32(v.Int()) }, //nolint:gosec
+		extractVal:  func(v protoreflect.Value) int32 { return int32(v.Int()) },
 		makeRuleVal: protoreflect.ValueOfInt32,
 	}
 	int64Config = numericTypeConfig[int64]{
@@ -145,13 +147,13 @@ var (
 	uint32Config = numericTypeConfig[uint32]{
 		typeName:    "uint32",
 		descs:       uint32Descs,
-		extractVal:  func(v protoreflect.Value) uint32 { return uint32(v.Uint()) }, //nolint:gosec
+		extractVal:  func(v protoreflect.Value) uint32 { return uint32(v.Uint()) },
 		makeRuleVal: protoreflect.ValueOfUint32,
 	}
 	fixed32Config = numericTypeConfig[uint32]{
 		typeName:    "fixed32",
 		descs:       fixed32Descs,
-		extractVal:  func(v protoreflect.Value) uint32 { return uint32(v.Uint()) }, //nolint:gosec
+		extractVal:  func(v protoreflect.Value) uint32 { return uint32(v.Uint()) },
 		makeRuleVal: protoreflect.ValueOfUint32,
 	}
 	uint64Config = numericTypeConfig[uint64]{
@@ -169,7 +171,7 @@ var (
 	floatConfig = numericTypeConfig[float32]{
 		typeName:      "float",
 		descs:         floatDescs,
-		extractVal:    func(v protoreflect.Value) float32 { return float32(v.Float()) }, //nolint:gosec
+		extractVal:    func(v protoreflect.Value) float32 { return float32(v.Float()) },
 		makeRuleVal:   protoreflect.ValueOfFloat32,
 		nanFailsRange: true,
 	}

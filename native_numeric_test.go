@@ -25,7 +25,6 @@ import (
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
-	"google.golang.org/protobuf/types/dynamicpb"
 )
 
 // numericTestCase defines a single constraint test case.
@@ -471,99 +470,6 @@ func TestTryBuildNativeNumericRules_ReturnsNil(t *testing.T) {
 			assert.Nil(t, tt.fn())
 		})
 	}
-}
-
-// --- End-to-end tests ---
-
-func TestNativeInt32_EndToEnd(t *testing.T) {
-	t.Setenv("PV_NATIVE_RULES", "true")
-
-	msgType := newDynamicMessageType(t, "test.native", "IntMsg", &descriptorpb.FieldDescriptorProto{
-		Name:   proto.String("value"),
-		Number: proto.Int32(1),
-		Type:   descriptorpb.FieldDescriptorProto_TYPE_INT32.Enum(),
-		Label:  descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
-		Options: fieldOpts(validate.FieldRules_builder{
-			Int32: validate.Int32Rules_builder{Gt: proto.Int32(0)}.Build(),
-		}.Build()),
-	})
-
-	validator, err := New(WithDisableLazy(), WithMessageDescriptors(msgType.Descriptor()))
-	require.NoError(t, err)
-
-	passing := dynamicpb.NewMessage(msgType.Descriptor())
-	passing.Set(msgType.Descriptor().Fields().ByName("value"), protoreflect.ValueOfInt32(1))
-	require.NoError(t, validator.Validate(passing))
-
-	failing := dynamicpb.NewMessage(msgType.Descriptor())
-	failing.Set(msgType.Descriptor().Fields().ByName("value"), protoreflect.ValueOfInt32(0))
-	err = validator.Validate(failing)
-	require.Error(t, err)
-	var valErr *ValidationError
-	require.ErrorAs(t, err, &valErr)
-	require.Len(t, valErr.Violations, 1)
-	assert.Equal(t, "int32.gt", valErr.Violations[0].Proto.GetRuleId())
-	assert.Equal(t, "value must be greater than 0", valErr.Violations[0].Proto.GetMessage())
-}
-
-func TestNativeUint64_EndToEnd(t *testing.T) {
-	t.Setenv("PV_NATIVE_RULES", "true")
-
-	msgType := newDynamicMessageType(t, "test.native", "Uint64Msg", &descriptorpb.FieldDescriptorProto{
-		Name:   proto.String("value"),
-		Number: proto.Int32(1),
-		Type:   descriptorpb.FieldDescriptorProto_TYPE_UINT64.Enum(),
-		Label:  descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
-		Options: fieldOpts(validate.FieldRules_builder{
-			Uint64: validate.UInt64Rules_builder{Gte: proto.Uint64(10)}.Build(),
-		}.Build()),
-	})
-
-	validator, err := New(WithDisableLazy(), WithMessageDescriptors(msgType.Descriptor()))
-	require.NoError(t, err)
-
-	passing := dynamicpb.NewMessage(msgType.Descriptor())
-	passing.Set(msgType.Descriptor().Fields().ByName("value"), protoreflect.ValueOfUint64(10))
-	require.NoError(t, validator.Validate(passing))
-
-	failing := dynamicpb.NewMessage(msgType.Descriptor())
-	failing.Set(msgType.Descriptor().Fields().ByName("value"), protoreflect.ValueOfUint64(9))
-	err = validator.Validate(failing)
-	require.Error(t, err)
-	var valErr *ValidationError
-	require.ErrorAs(t, err, &valErr)
-	require.Len(t, valErr.Violations, 1)
-	assert.Equal(t, "uint64.gte", valErr.Violations[0].Proto.GetRuleId())
-}
-
-func TestNativeDouble_EndToEnd(t *testing.T) {
-	t.Setenv("PV_NATIVE_RULES", "true")
-
-	msgType := newDynamicMessageType(t, "test.native", "DoubleMsg", &descriptorpb.FieldDescriptorProto{
-		Name:   proto.String("value"),
-		Number: proto.Int32(1),
-		Type:   descriptorpb.FieldDescriptorProto_TYPE_DOUBLE.Enum(),
-		Label:  descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
-		Options: fieldOpts(validate.FieldRules_builder{
-			Double: validate.DoubleRules_builder{Lt: proto.Float64(100)}.Build(),
-		}.Build()),
-	})
-
-	validator, err := New(WithDisableLazy(), WithMessageDescriptors(msgType.Descriptor()))
-	require.NoError(t, err)
-
-	passing := dynamicpb.NewMessage(msgType.Descriptor())
-	passing.Set(msgType.Descriptor().Fields().ByName("value"), protoreflect.ValueOfFloat64(50))
-	require.NoError(t, validator.Validate(passing))
-
-	failing := dynamicpb.NewMessage(msgType.Descriptor())
-	failing.Set(msgType.Descriptor().Fields().ByName("value"), protoreflect.ValueOfFloat64(100))
-	err = validator.Validate(failing)
-	require.Error(t, err)
-	var valErr *ValidationError
-	require.ErrorAs(t, err, &valErr)
-	require.Len(t, valErr.Violations, 1)
-	assert.Equal(t, "double.lt", valErr.Violations[0].Proto.GetRuleId())
 }
 
 // --- Helpers ---

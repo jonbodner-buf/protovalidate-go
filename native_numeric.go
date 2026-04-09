@@ -321,7 +321,7 @@ func (n nativeNumericCompare[T]) Evaluate(_ protoreflect.Message, val protorefle
 	if len(n.inVals) > 0 && !slices.Contains(n.inVals, valT) {
 		return n.newViolation(n.config.descs.ruleDesc, n.config.descs.inDesc,
 			n.config.typeName+".in",
-			"value must be in "+formatList(n.inVals),
+			"value must be in list "+formatList(n.inVals),
 			val, n.config.makeRuleVal(valT))
 	}
 
@@ -329,7 +329,7 @@ func (n nativeNumericCompare[T]) Evaluate(_ protoreflect.Message, val protorefle
 	if len(n.notInVals) > 0 && slices.Contains(n.notInVals, valT) {
 		return n.newViolation(n.config.descs.ruleDesc, n.config.descs.notInDesc,
 			n.config.typeName+".not_in",
-			"value must not be in "+formatList(n.notInVals),
+			"value must not be in list "+formatList(n.notInVals),
 			val, n.config.makeRuleVal(valT))
 	}
 
@@ -551,5 +551,5 @@ func formatList[T any](vals []T) string {
 	for i, v := range vals {
 		parts[i] = fmt.Sprintf("%v", v)
 	}
-	return "list [" + strings.Join(parts, ", ") + "]"
+	return "[" + strings.Join(parts, ", ") + "]"
 }

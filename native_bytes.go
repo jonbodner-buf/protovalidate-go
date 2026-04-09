@@ -83,7 +83,7 @@ type nativeBytesEval struct {
 }
 
 var (
-	ErrNotUTF8 = errors.New("value must be valid UTF-8 to apply regexp")
+	errNotUTF8 = errors.New("value must be valid UTF-8 to apply regexp")
 )
 
 func (n nativeBytesEval) Evaluate(_ protoreflect.Message, val protoreflect.Value, _ *validationConfig) error {
@@ -120,7 +120,7 @@ func (n nativeBytesEval) Evaluate(_ protoreflect.Message, val protoreflect.Value
 	// pattern (matches against string conversion of bytes)
 	if n.pattern != nil {
 		if !utf8.Valid(bytesVal) {
-			return &RuntimeError{cause: ErrNotUTF8}
+			return &RuntimeError{cause: errNotUTF8}
 		}
 		if !n.pattern.MatchString(string(bytesVal)) {
 			return n.newViolation(bytesDescs.ruleDesc, bytesDescs.patternDesc,

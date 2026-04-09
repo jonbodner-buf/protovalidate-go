@@ -541,6 +541,8 @@ func (bldr *builder) tryNativeRules(
 		return tryBuildNativeDoubleRules(base, rules.GetDouble())
 	case protoreflect.StringKind:
 		return tryBuildNativeStringRules(base, rules.GetString())
+	case protoreflect.BoolKind:
+		return tryBuildNativeBoolRules(base, rules.GetBool())
 	default:
 		return nil
 	}

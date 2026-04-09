@@ -98,6 +98,19 @@ func TestDynamicRulesEndToEnd(t *testing.T) {
 				failedRuleMessage: "value does not have prefix `hello`",
 			},
 		},
+		{
+			name: "bool_const",
+			typ:  descriptorpb.FieldDescriptorProto_TYPE_BOOL.Enum(),
+			rule: validate.FieldRules_builder{
+				Bool: validate.BoolRules_builder{Const: proto.Bool(true)}.Build(),
+			}.Build(),
+			info: dynamicMessageTesterInfo{
+				goodValue:         protoreflect.ValueOfBool(true),
+				badValue:          protoreflect.ValueOfBool(false),
+				failedRuleID:      "bool.const",
+				failedRuleMessage: "value must equal true",
+			},
+		},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {

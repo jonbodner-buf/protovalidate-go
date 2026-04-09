@@ -545,6 +545,8 @@ func (bldr *builder) tryNativeRules(
 		return tryBuildNativeBoolRules(base, rules.GetBool())
 	case protoreflect.EnumKind:
 		return tryBuildNativeEnumRules(base, rules.GetEnum())
+	case protoreflect.BytesKind:
+		return tryBuildNativeBytesRules(base, rules.GetBytes())
 	default:
 		return nil
 	}

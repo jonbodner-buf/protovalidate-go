@@ -223,6 +223,142 @@ func dynamicMessageTester(t *testing.T, info dynamicMessageTesterInfo) {
 	assert.Equal(t, info.failedRuleMessage, valErr.Violations[0].Proto.GetMessage())
 }
 
+// TestEnumCombinedRules validates that enum fields work correctly when
+// multiple rules are active: native const/in/not_in (via processStandardRules)
+// combined with native defined_only (via processEnumRules).
+func TestEnumCombinedRules(t *testing.T) {
+	enumDesc := &descriptorpb.EnumDescriptorProto{
+		Name: proto.String("Status"),
+		Value: []*descriptorpb.EnumValueDescriptorProto{
+			{Name: proto.String("STATUS_UNSPECIFIED"), Number: proto.Int32(0)},
+			{Name: proto.String("STATUS_ACTIVE"), Number: proto.Int32(1)},
+			{Name: proto.String("STATUS_INACTIVE"), Number: proto.Int32(2)},
+		},
+	}
+
+	tests := []struct {
+		name           string
+		rules          *validate.EnumRules
+		value          protoreflect.EnumNumber
+		wantErr        bool
+		violationCount int
+		ruleIDs        []string // expected rule IDs in order
+	}{
+		// --- defined_only + in ---
+		{
+			name:    "defined_only+in/pass: defined and in list",
+			rules:   validate.EnumRules_builder{DefinedOnly: proto.Bool(true), In: []int32{1, 2}}.Build(),
+			value:   1, // STATUS_ACTIVE: defined, in [1,2]
+			wantErr: false,
+		},
+		{
+			name:           "defined_only+in/fail_in_only: defined but not in list",
+			rules:          validate.EnumRules_builder{DefinedOnly: proto.Bool(true), In: []int32{1, 2}}.Build(),
+			value:          0, // STATUS_UNSPECIFIED: defined, not in [1,2]
+			wantErr:        true,
+			violationCount: 1,
+			ruleIDs:        []string{"enum.in"},
+		},
+		{
+			name:           "defined_only+in/fail_both: undefined and not in list",
+			rules:          validate.EnumRules_builder{DefinedOnly: proto.Bool(true), In: []int32{1, 2}}.Build(),
+			value:          99, // undefined, not in [1,2]
+			wantErr:        true,
+			violationCount: 2,
+			ruleIDs:        []string{"enum.in", "enum.defined_only"},
+		},
+
+		// --- defined_only + const ---
+		{
+			name:    "defined_only+const/pass: defined and equals const",
+			rules:   validate.EnumRules_builder{DefinedOnly: proto.Bool(true), Const: proto.Int32(1)}.Build(),
+			value:   1, // STATUS_ACTIVE: defined, equals 1
+			wantErr: false,
+		},
+		{
+			name:           "defined_only+const/fail_const_only: defined but wrong value",
+			rules:          validate.EnumRules_builder{DefinedOnly: proto.Bool(true), Const: proto.Int32(1)}.Build(),
+			value:          2, // STATUS_INACTIVE: defined, but not 1
+			wantErr:        true,
+			violationCount: 1,
+			ruleIDs:        []string{"enum.const"},
+		},
+		{
+			name:           "defined_only+const/fail_both: undefined and wrong value",
+			rules:          validate.EnumRules_builder{DefinedOnly: proto.Bool(true), Const: proto.Int32(1)}.Build(),
+			value:          99, // undefined, not 1
+			wantErr:        true,
+			violationCount: 2,
+			ruleIDs:        []string{"enum.const", "enum.defined_only"},
+		},
+
+		// --- defined_only + not_in ---
+		{
+			name:    "defined_only+not_in/pass: defined and not in exclusion list",
+			rules:   validate.EnumRules_builder{DefinedOnly: proto.Bool(true), NotIn: []int32{0}}.Build(),
+			value:   1, // STATUS_ACTIVE: defined, not in [0]
+			wantErr: false,
+		},
+		{
+			name:           "defined_only+not_in/fail_not_in_only: defined but in exclusion list",
+			rules:          validate.EnumRules_builder{DefinedOnly: proto.Bool(true), NotIn: []int32{0}}.Build(),
+			value:          0, // STATUS_UNSPECIFIED: defined, but in [0]
+			wantErr:        true,
+			violationCount: 1,
+			ruleIDs:        []string{"enum.not_in"},
+		},
+		{
+			name:           "defined_only+not_in/fail_defined_only: undefined but not in exclusion list",
+			rules:          validate.EnumRules_builder{DefinedOnly: proto.Bool(true), NotIn: []int32{0}}.Build(),
+			value:          99, // undefined, but 99 is not in [0]
+			wantErr:        true,
+			violationCount: 1,
+			ruleIDs:        []string{"enum.defined_only"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msgType := newDynamicMessageTypeWithEnum(t, "test.combined", "EnumCombined", enumDesc, &descriptorpb.FieldDescriptorProto{
+				Name:     proto.String("status"),
+				Number:   proto.Int32(1),
+				Type:     descriptorpb.FieldDescriptorProto_TYPE_ENUM.Enum(),
+				TypeName: proto.String(".test.combined.Status"),
+				Label:    descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
+				Options:  fieldOpts(validate.FieldRules_builder{Enum: tt.rules}.Build()),
+			})
+
+			// Run with both CEL and native to verify identical results.
+			for _, mode := range []string{"false", "true"} {
+				t.Run("native="+mode, func(t *testing.T) {
+					t.Setenv("PV_NATIVE_RULES", mode)
+
+					validator, err := New(WithDisableLazy(), WithMessageDescriptors(msgType.Descriptor()))
+					require.NoError(t, err)
+
+					msg := dynamicpb.NewMessage(msgType.Descriptor())
+					msg.Set(msgType.Descriptor().Fields().ByName("status"), protoreflect.ValueOfEnum(tt.value))
+
+					err = validator.Validate(msg)
+					if !tt.wantErr {
+						require.NoError(t, err)
+						return
+					}
+					require.Error(t, err)
+					var valErr *ValidationError
+					require.ErrorAs(t, err, &valErr)
+					require.Len(t, valErr.Violations, tt.violationCount,
+						"expected %d violations, got %d", tt.violationCount, len(valErr.Violations))
+					for i, expectedID := range tt.ruleIDs {
+						assert.Equal(t, expectedID, valErr.Violations[i].Proto.GetRuleId(),
+							"violation[%d] rule ID mismatch", i)
+					}
+				})
+			}
+		})
+	}
+}
+
 // newDynamicMessageTypeWithEnum creates a dynamic message type that includes
 // an enum type definition.
 func newDynamicMessageTypeWithEnum(

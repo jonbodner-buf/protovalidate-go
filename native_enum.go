@@ -19,7 +19,6 @@ import (
 	"slices"
 
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -40,67 +39,28 @@ type nativeEnumEval struct {
 
 func (n nativeEnumEval) Evaluate(_ protoreflect.Message, val protoreflect.Value, _ *validationConfig) error {
 	enumVal := int32(val.Enum())
-
 	// const
 	if n.constVal != nil && enumVal != *n.constVal {
-		return n.violationError(
-			"enum.const",
-			fmt.Sprintf("value must equal %d", *n.constVal),
-			val,
-			enumConstDesc,
-			*n.constVal,
-		)
+		return n.newViolation(enumRuleDescriptor, enumConstDesc,
+			"enum.const", fmt.Sprintf("value must equal %d", *n.constVal),
+			val, protoreflect.ValueOfInt32(*n.constVal))
 	}
 
 	// in
 	if len(n.inVals) > 0 && !slices.Contains(n.inVals, enumVal) {
-		return n.violationError(
-			"enum.in",
-			"value must be in "+formatList(n.inVals),
-			val,
-			enumInDesc,
-			enumVal,
-		)
+		return n.newViolation(enumRuleDescriptor, enumInDesc,
+			"enum.in", "value must be in "+formatList(n.inVals),
+			val, protoreflect.ValueOfInt32(enumVal))
 	}
 
 	// not_in
 	if len(n.notInVals) > 0 && slices.Contains(n.notInVals, enumVal) {
-		return n.violationError(
-			"enum.not_in",
-			"value must not be in "+formatList(n.notInVals),
-			val,
-			enumNotInDesc,
-			enumVal,
-		)
+		return n.newViolation(enumRuleDescriptor, enumNotInDesc,
+			"enum.not_in", "value must not be in "+formatList(n.notInVals),
+			val, protoreflect.ValueOfInt32(enumVal))
 	}
 
 	return nil
-}
-
-func (n nativeEnumEval) violationError(
-	ruleID string,
-	message string,
-	fieldValue protoreflect.Value,
-	desc protoreflect.FieldDescriptor,
-	ruleVal int32,
-) error {
-	return &ValidationError{Violations: []*Violation{{
-		Proto: validate.Violation_builder{
-			Field: n.fieldPath(),
-			Rule: n.rulePath(validate.FieldPath_builder{
-				Elements: []*validate.FieldPathElement{
-					fieldPathElement(enumRuleDescriptor),
-					fieldPathElement(desc),
-				},
-			}.Build()),
-			RuleId:  proto.String(ruleID),
-			Message: proto.String(message),
-		}.Build(),
-		FieldValue:      fieldValue,
-		FieldDescriptor: n.Descriptor,
-		RuleValue:       protoreflect.ValueOfInt32(ruleVal),
-		RuleDescriptor:  desc,
-	}}}
 }
 
 func (n nativeEnumEval) Tautology() bool {

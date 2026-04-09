@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -310,72 +309,48 @@ func (n nativeNumericCompare[T]) conjunction() string {
 
 func (n nativeNumericCompare[T]) Evaluate(_ protoreflect.Message, val protoreflect.Value, _ *validationConfig) error {
 	valT := n.config.extractVal(val)
-
-	// For float/double, NaN fails all range checks (matches CEL behavior).
-	isNaN := n.config.nanFailsRange && math.IsNaN(float64(valT))
-
 	// const support
-	if n.constVal != nil {
-		if valT != *n.constVal {
-			return n.violationError(
-				n.config.typeName+".const",
-				fmt.Sprintf("value must equal %v", *n.constVal),
-				val,
-				n.config.descs.constDesc,
-				*n.constVal,
-			)
-		}
+	if n.constVal != nil && valT != *n.constVal {
+		return n.newViolation(n.config.descs.ruleDesc, n.config.descs.constDesc,
+			n.config.typeName+".const",
+			fmt.Sprintf("value must equal %v", *n.constVal),
+			val, n.config.makeRuleVal(*n.constVal))
 	}
 
 	// in support
-	if len(n.inVals) > 0 {
-		if !slices.Contains(n.inVals, valT) {
-			return n.violationError(
-				n.config.typeName+".in",
-				"value must be in "+formatList(n.inVals),
-				val,
-				n.config.descs.inDesc,
-				valT,
-			)
-		}
+	if len(n.inVals) > 0 && !slices.Contains(n.inVals, valT) {
+		return n.newViolation(n.config.descs.ruleDesc, n.config.descs.inDesc,
+			n.config.typeName+".in",
+			"value must be in "+formatList(n.inVals),
+			val, n.config.makeRuleVal(valT))
 	}
 
 	// not in support
-	if len(n.notInVals) > 0 {
-		if slices.Contains(n.notInVals, valT) {
-			return n.violationError(
-				n.config.typeName+".not_in",
-				"value must not be in "+formatList(n.notInVals),
-				val,
-				n.config.descs.notInDesc,
-				valT,
-			)
-		}
+	if len(n.notInVals) > 0 && slices.Contains(n.notInVals, valT) {
+		return n.newViolation(n.config.descs.ruleDesc, n.config.descs.notInDesc,
+			n.config.typeName+".not_in",
+			"value must not be in "+formatList(n.notInVals),
+			val, n.config.makeRuleVal(valT))
 	}
 
 	if n.lower == lowerBoundNone && n.upper == upperBoundNone {
 		return nil
 	}
+	// For float/double, NaN fails all range checks (matches CEL behavior).
+	isNaN := n.config.nanFailsRange && math.IsNaN(float64(valT))
+
 	switch {
 	case n.lower == lowerBoundNone:
 		if isNaN || n.aboveHi(valT) {
-			return n.violationError(
-				n.gtltRule(),
-				"value must be "+n.hiMessage(),
-				val,
-				n.hiDesc(),
-				n.hi,
-			)
+			return n.newViolation(n.config.descs.ruleDesc, n.hiDesc(),
+				n.gtltRule(), "value must be "+n.hiMessage(),
+				val, n.config.makeRuleVal(n.hi))
 		}
 	case n.upper == upperBoundNone:
 		if isNaN || n.belowLo(valT) {
-			return n.violationError(
-				n.gtltRule(),
-				"value must be "+n.loMessage(),
-				val,
-				n.loDesc(),
-				n.lo,
-			)
+			return n.newViolation(n.config.descs.ruleDesc, n.loDesc(),
+				n.gtltRule(), "value must be "+n.loMessage(),
+				val, n.config.makeRuleVal(n.lo))
 		}
 	default:
 		var failure bool
@@ -385,42 +360,13 @@ func (n nativeNumericCompare[T]) Evaluate(_ protoreflect.Message, val protorefle
 			failure = isNaN || (n.aboveHi(valT) && n.belowLo(valT))
 		}
 		if failure {
-			return n.violationError(
+			return n.newViolation(n.config.descs.ruleDesc, n.loDesc(),
 				n.gtltRule(),
 				fmt.Sprintf("value must be %s %s %s", n.loMessage(), n.conjunction(), n.hiMessage()),
-				val,
-				n.loDesc(),
-				n.lo,
-			)
+				val, n.config.makeRuleVal(n.lo))
 		}
 	}
 	return nil
-}
-
-func (n nativeNumericCompare[T]) violationError(
-	ruleID string,
-	message string,
-	fieldValue protoreflect.Value,
-	desc protoreflect.FieldDescriptor,
-	ruleVal T,
-) error {
-	return &ValidationError{Violations: []*Violation{{
-		Proto: validate.Violation_builder{
-			Field: n.fieldPath(),
-			Rule: n.rulePath(validate.FieldPath_builder{
-				Elements: []*validate.FieldPathElement{
-					fieldPathElement(n.config.descs.ruleDesc),
-					fieldPathElement(desc),
-				},
-			}.Build()),
-			RuleId:  proto.String(ruleID),
-			Message: proto.String(message),
-		}.Build(),
-		FieldValue:      fieldValue,
-		FieldDescriptor: n.Descriptor,
-		RuleValue:       n.config.makeRuleVal(ruleVal),
-		RuleDescriptor:  desc,
-	}}}
 }
 
 func (n nativeNumericCompare[T]) Tautology() bool {
@@ -600,7 +546,7 @@ func tryBuildNativeDoubleRules(base base, rules *validate.DoubleRules) evaluator
 func ptr[T any](v T) *T { return &v }
 
 // formatList formats a slice as "list [val1, val2]" to match CEL message format.
-func formatList[T numericValue](vals []T) string {
+func formatList[T any](vals []T) string {
 	parts := make([]string, len(vals))
 	for i, v := range vals {
 		parts[i] = fmt.Sprintf("%v", v)

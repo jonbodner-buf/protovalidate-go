@@ -22,7 +22,6 @@ import (
 	"unicode/utf8"
 
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -115,217 +114,107 @@ func (n nativeStringEval) Evaluate(_ protoreflect.Message, val protoreflect.Valu
 
 	// const
 	if n.constVal != nil && strVal != *n.constVal {
-		return n.violationError(
-			"string.const",
-			fmt.Sprintf("value must equal `%s`", *n.constVal),
-			val,
-			strDescs.constDesc,
-			*n.constVal,
-		)
+		return n.newViolation(strDescs.ruleDesc, strDescs.constDesc,
+			"string.const", fmt.Sprintf("value must equal `%s`", *n.constVal),
+			val, protoreflect.ValueOfString(*n.constVal))
 	}
 
 	// pattern
 	if n.pattern != nil && !n.pattern.MatchString(strVal) {
-		return n.violationError(
-			"string.pattern",
-			fmt.Sprintf("value does not match regex pattern `%s`", n.patternStr),
-			val,
-			strDescs.patternDesc,
-			n.patternStr,
-		)
+		return n.newViolation(strDescs.ruleDesc, strDescs.patternDesc,
+			"string.pattern", fmt.Sprintf("value does not match regex pattern `%s`", n.patternStr),
+			val, protoreflect.ValueOfString(n.patternStr))
 	}
 
 	// prefix
 	if n.prefix != nil && !strings.HasPrefix(strVal, *n.prefix) {
-		return n.violationError(
-			"string.prefix",
-			fmt.Sprintf("value does not have prefix `%s`", *n.prefix),
-			val,
-			strDescs.prefixDesc,
-			*n.prefix,
-		)
+		return n.newViolation(strDescs.ruleDesc, strDescs.prefixDesc,
+			"string.prefix", fmt.Sprintf("value does not have prefix `%s`", *n.prefix),
+			val, protoreflect.ValueOfString(*n.prefix))
 	}
 
 	// suffix
 	if n.suffix != nil && !strings.HasSuffix(strVal, *n.suffix) {
-		return n.violationError(
-			"string.suffix",
-			fmt.Sprintf("value does not have suffix `%s`", *n.suffix),
-			val,
-			strDescs.suffixDesc,
-			*n.suffix,
-		)
+		return n.newViolation(strDescs.ruleDesc, strDescs.suffixDesc,
+			"string.suffix", fmt.Sprintf("value does not have suffix `%s`", *n.suffix),
+			val, protoreflect.ValueOfString(*n.suffix))
 	}
 
 	// contains
 	if n.contains != nil && !strings.Contains(strVal, *n.contains) {
-		return n.violationError(
-			"string.contains",
-			fmt.Sprintf("value does not contain substring `%s`", *n.contains),
-			val,
-			strDescs.containsDesc,
-			*n.contains,
-		)
+		return n.newViolation(strDescs.ruleDesc, strDescs.containsDesc,
+			"string.contains", fmt.Sprintf("value does not contain substring `%s`", *n.contains),
+			val, protoreflect.ValueOfString(*n.contains))
 	}
 
 	// not_contains
 	if n.notContains != nil && strings.Contains(strVal, *n.notContains) {
-		return n.violationError(
-			"string.not_contains",
-			fmt.Sprintf("value contains substring `%s`", *n.notContains),
-			val,
-			strDescs.notContainsDesc,
-			*n.notContains,
-		)
+		return n.newViolation(strDescs.ruleDesc, strDescs.notContainsDesc,
+			"string.not_contains", fmt.Sprintf("value contains substring `%s`", *n.notContains),
+			val, protoreflect.ValueOfString(*n.notContains))
 	}
 
 	// in
 	if len(n.inVals) > 0 && !slices.Contains(n.inVals, strVal) {
-		return n.violationError(
-			"string.in",
-			"value must be in list "+formatStringList(n.inVals),
-			val,
-			strDescs.inDesc,
-			strVal,
-		)
+		return n.newViolation(strDescs.ruleDesc, strDescs.inDesc,
+			"string.in", "value must be in list "+formatStringList(n.inVals),
+			val, protoreflect.ValueOfString(strVal))
 	}
 
 	// not_in
 	if len(n.notInVals) > 0 && slices.Contains(n.notInVals, strVal) {
-		return n.violationError(
-			"string.not_in",
-			"value must not be in list "+formatStringList(n.notInVals),
-			val,
-			strDescs.notInDesc,
-			strVal,
-		)
+		return n.newViolation(strDescs.ruleDesc, strDescs.notInDesc,
+			"string.not_in", "value must not be in list "+formatStringList(n.notInVals),
+			val, protoreflect.ValueOfString(strVal))
 	}
 
 	return nil
 }
 
+// it would be worse to unify this and evaluateLength than it is to leave them as
+// very similar bits of code
+//
+//nolint:dupl
 func (n nativeStringEval) evaluateByteLength(byteCount uint64, val protoreflect.Value) error {
-	// len_bytes
 	if n.exactBytes != nil && byteCount != *n.exactBytes {
-		return n.violationErrUint64(
-			"string.len_bytes",
-			fmt.Sprintf("value length must be %d bytes", *n.exactBytes),
-			val,
-			strDescs.lenBytesDesc,
-			*n.exactBytes,
-		)
+		return n.newViolation(strDescs.ruleDesc, strDescs.lenBytesDesc,
+			"string.len_bytes", fmt.Sprintf("value length must be %d bytes", *n.exactBytes),
+			val, protoreflect.ValueOfUint64(*n.exactBytes))
 	}
-
-	// min_bytes
 	if n.minBytes != nil && byteCount < *n.minBytes {
-		return n.violationErrUint64(
-			"string.min_bytes",
-			fmt.Sprintf("value length must be at least %d bytes", *n.minBytes),
-			val,
-			strDescs.minBytesDesc,
-			*n.minBytes,
-		)
+		return n.newViolation(strDescs.ruleDesc, strDescs.minBytesDesc,
+			"string.min_bytes", fmt.Sprintf("value length must be at least %d bytes", *n.minBytes),
+			val, protoreflect.ValueOfUint64(*n.minBytes))
 	}
-
-	// max_bytes
 	if n.maxBytes != nil && byteCount > *n.maxBytes {
-		return n.violationErrUint64(
-			"string.max_bytes",
-			fmt.Sprintf("value length must be at most %d bytes", *n.maxBytes),
-			val,
-			strDescs.maxBytesDesc,
-			*n.maxBytes,
-		)
+		return n.newViolation(strDescs.ruleDesc, strDescs.maxBytesDesc,
+			"string.max_bytes", fmt.Sprintf("value length must be at most %d bytes", *n.maxBytes),
+			val, protoreflect.ValueOfUint64(*n.maxBytes))
 	}
 	return nil
 }
 
+// it would be worse to unify this and evaluateByteLength than it is to leave them as
+// very similar bits of code
+//
+//nolint:dupl
 func (n nativeStringEval) evaluateLength(runeCount uint64, val protoreflect.Value) error {
-	// len (character count)
 	if n.exactLen != nil && runeCount != *n.exactLen {
-		return n.violationErrUint64(
-			"string.len",
-			fmt.Sprintf("value length must be %d characters", *n.exactLen),
-			val,
-			strDescs.lenDesc,
-			*n.exactLen,
-		)
+		return n.newViolation(strDescs.ruleDesc, strDescs.lenDesc,
+			"string.len", fmt.Sprintf("value length must be %d characters", *n.exactLen),
+			val, protoreflect.ValueOfUint64(*n.exactLen))
 	}
-
-	// min_len
 	if n.minLen != nil && runeCount < *n.minLen {
-		return n.violationErrUint64(
-			"string.min_len",
-			fmt.Sprintf("value length must be at least %d characters", *n.minLen),
-			val,
-			strDescs.minLenDesc,
-			*n.minLen,
-		)
+		return n.newViolation(strDescs.ruleDesc, strDescs.minLenDesc,
+			"string.min_len", fmt.Sprintf("value length must be at least %d characters", *n.minLen),
+			val, protoreflect.ValueOfUint64(*n.minLen))
 	}
-
-	// max_len
 	if n.maxLen != nil && runeCount > *n.maxLen {
-		return n.violationErrUint64(
-			"string.max_len",
-			fmt.Sprintf("value length must be at most %d characters", *n.maxLen),
-			val,
-			strDescs.maxLenDesc,
-			*n.maxLen,
-		)
+		return n.newViolation(strDescs.ruleDesc, strDescs.maxLenDesc,
+			"string.max_len", fmt.Sprintf("value length must be at most %d characters", *n.maxLen),
+			val, protoreflect.ValueOfUint64(*n.maxLen))
 	}
 	return nil
-}
-
-func (n nativeStringEval) violationError(
-	ruleID string,
-	message string,
-	fieldValue protoreflect.Value,
-	desc protoreflect.FieldDescriptor,
-	ruleVal string,
-) error {
-	return &ValidationError{Violations: []*Violation{{
-		Proto: validate.Violation_builder{
-			Field: n.fieldPath(),
-			Rule: n.rulePath(validate.FieldPath_builder{
-				Elements: []*validate.FieldPathElement{
-					fieldPathElement(strDescs.ruleDesc),
-					fieldPathElement(desc),
-				},
-			}.Build()),
-			RuleId:  proto.String(ruleID),
-			Message: proto.String(message),
-		}.Build(),
-		FieldValue:      fieldValue,
-		FieldDescriptor: n.Descriptor,
-		RuleValue:       protoreflect.ValueOfString(ruleVal),
-		RuleDescriptor:  desc,
-	}}}
-}
-
-func (n nativeStringEval) violationErrUint64(
-	ruleID string,
-	message string,
-	fieldValue protoreflect.Value,
-	desc protoreflect.FieldDescriptor,
-	ruleVal uint64,
-) error {
-	return &ValidationError{Violations: []*Violation{{
-		Proto: validate.Violation_builder{
-			Field: n.fieldPath(),
-			Rule: n.rulePath(validate.FieldPath_builder{
-				Elements: []*validate.FieldPathElement{
-					fieldPathElement(strDescs.ruleDesc),
-					fieldPathElement(desc),
-				},
-			}.Build()),
-			RuleId:  proto.String(ruleID),
-			Message: proto.String(message),
-		}.Build(),
-		FieldValue:      fieldValue,
-		FieldDescriptor: n.Descriptor,
-		RuleValue:       protoreflect.ValueOfUint64(ruleVal),
-		RuleDescriptor:  desc,
-	}}}
 }
 
 func (n nativeStringEval) Tautology() bool {

@@ -1,0 +1,294 @@
+// Copyright 2023-2026 Buf Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package protovalidate
+
+import (
+	"bytes"
+	"errors"
+	"fmt"
+	"regexp"
+	"slices"
+	"strings"
+	"unicode/utf8"
+
+	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	"google.golang.org/protobuf/reflect/protoreflect"
+)
+
+// bytesDescriptors bundles the field descriptors for BytesRules.
+type bytesDescriptors struct {
+	ruleDesc     protoreflect.FieldDescriptor
+	constDesc    protoreflect.FieldDescriptor
+	lenDesc      protoreflect.FieldDescriptor
+	minLenDesc   protoreflect.FieldDescriptor
+	maxLenDesc   protoreflect.FieldDescriptor
+	patternDesc  protoreflect.FieldDescriptor
+	prefixDesc   protoreflect.FieldDescriptor
+	suffixDesc   protoreflect.FieldDescriptor
+	containsDesc protoreflect.FieldDescriptor
+	inDesc       protoreflect.FieldDescriptor
+	notInDesc    protoreflect.FieldDescriptor
+}
+
+func makeBytesDescriptors() bytesDescriptors {
+	rulesDesc := (*validate.BytesRules)(nil).ProtoReflect().Descriptor()
+	return bytesDescriptors{
+		ruleDesc:     fieldRulesDesc.Fields().ByName("bytes"),
+		constDesc:    rulesDesc.Fields().ByName("const"),
+		lenDesc:      rulesDesc.Fields().ByName("len"),
+		minLenDesc:   rulesDesc.Fields().ByName("min_len"),
+		maxLenDesc:   rulesDesc.Fields().ByName("max_len"),
+		patternDesc:  rulesDesc.Fields().ByName("pattern"),
+		prefixDesc:   rulesDesc.Fields().ByName("prefix"),
+		suffixDesc:   rulesDesc.Fields().ByName("suffix"),
+		containsDesc: rulesDesc.Fields().ByName("contains"),
+		inDesc:       rulesDesc.Fields().ByName("in"),
+		notInDesc:    rulesDesc.Fields().ByName("not_in"),
+	}
+}
+
+//nolint:gochecknoglobals
+var bytesDescs = makeBytesDescriptors()
+
+// nativeBytesEval is a native Go evaluator for bytes rules.
+type nativeBytesEval struct {
+	base
+	constVal    []byte
+	hasConst    bool
+	exactLen    *uint64
+	minLen      *uint64
+	maxLen      *uint64
+	pattern     *regexp.Regexp
+	patternStr  string
+	prefix      []byte
+	hasPrefix   bool
+	suffix      []byte
+	hasSuffix   bool
+	contains    []byte
+	hasContains bool
+	inVals      [][]byte
+	notInVals   [][]byte
+}
+
+var (
+	ErrNotUTF8 = errors.New("value must be valid UTF-8 to apply regexp")
+)
+
+func (n nativeBytesEval) Evaluate(_ protoreflect.Message, val protoreflect.Value, _ *validationConfig) error {
+	bytesVal := val.Bytes()
+	byteLen := uint64(len(bytesVal))
+	// const
+	if n.hasConst && !bytes.Equal(bytesVal, n.constVal) {
+		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.constDesc,
+			"bytes.const", fmt.Sprintf("value must be %x", n.constVal),
+			val, protoreflect.ValueOfBytes(n.constVal))
+	}
+
+	// len
+	if n.exactLen != nil && byteLen != *n.exactLen {
+		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.lenDesc,
+			"bytes.len", fmt.Sprintf("value length must be %d bytes", *n.exactLen),
+			val, protoreflect.ValueOfUint64(*n.exactLen))
+	}
+
+	// min_len
+	if n.minLen != nil && byteLen < *n.minLen {
+		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.minLenDesc,
+			"bytes.min_len", fmt.Sprintf("value length must be at least %d bytes", *n.minLen),
+			val, protoreflect.ValueOfUint64(*n.minLen))
+	}
+
+	// max_len
+	if n.maxLen != nil && byteLen > *n.maxLen {
+		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.maxLenDesc,
+			"bytes.max_len", fmt.Sprintf("value must be at most %d bytes", *n.maxLen),
+			val, protoreflect.ValueOfUint64(*n.maxLen))
+	}
+
+	// pattern (matches against string conversion of bytes)
+	if n.pattern != nil {
+		if !utf8.Valid(bytesVal) {
+			return &RuntimeError{cause: ErrNotUTF8}
+		}
+		if !n.pattern.MatchString(string(bytesVal)) {
+			return n.newViolation(bytesDescs.ruleDesc, bytesDescs.patternDesc,
+				"bytes.pattern", fmt.Sprintf("value must match regex pattern `%s`", n.patternStr),
+				val, protoreflect.ValueOfString(n.patternStr))
+		}
+	}
+
+	// prefix
+	if n.hasPrefix && !bytes.HasPrefix(bytesVal, n.prefix) {
+		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.prefixDesc,
+			"bytes.prefix", fmt.Sprintf("value does not have prefix %x", n.prefix),
+			val, protoreflect.ValueOfBytes(n.prefix))
+	}
+
+	// suffix
+	if n.hasSuffix && !bytes.HasSuffix(bytesVal, n.suffix) {
+		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.suffixDesc,
+			"bytes.suffix", fmt.Sprintf("value does not have suffix %x", n.suffix),
+			val, protoreflect.ValueOfBytes(n.suffix))
+	}
+
+	// contains
+	if n.hasContains && !bytes.Contains(bytesVal, n.contains) {
+		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.containsDesc,
+			"bytes.contains", fmt.Sprintf("value does not contain %x", n.contains),
+			val, protoreflect.ValueOfBytes(n.contains))
+	}
+
+	// in
+	if len(n.inVals) > 0 && !slices.ContainsFunc(n.inVals, func(v []byte) bool { return bytes.Equal(v, bytesVal) }) {
+		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.inDesc,
+			"bytes.in", "value must be in list "+formatBytesList(n.inVals),
+			val, protoreflect.ValueOfBytes(bytesVal))
+	}
+
+	// not_in
+	if len(n.notInVals) > 0 && slices.ContainsFunc(n.notInVals, func(v []byte) bool { return bytes.Equal(v, bytesVal) }) {
+		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.notInDesc,
+			"bytes.not_in", "value must not be in list "+formatBytesList(n.notInVals),
+			val, protoreflect.ValueOfBytes(bytesVal))
+	}
+
+	return nil
+}
+
+func (n nativeBytesEval) Tautology() bool {
+	return false
+}
+
+var _ evaluator = nativeBytesEval{}
+
+// tryBuildNativeBytesRules attempts to build a native Go evaluator for
+// bytes rules. Returns nil if the rules can't be handled natively.
+func tryBuildNativeBytesRules(base base, rules *validate.BytesRules) evaluator {
+	if rules == nil {
+		return nil
+	}
+	if len(rules.ProtoReflect().GetUnknown()) > 0 {
+		return nil
+	}
+	if rules.HasWellKnown() {
+		return nil
+	}
+
+	hasRule := false
+
+	var constVal []byte
+	var hasConst bool
+	if rules.HasConst() {
+		constVal = rules.GetConst()
+		hasConst = true
+		hasRule = true
+	}
+
+	var exactLen *uint64
+	if rules.HasLen() {
+		exactLen = ptr(rules.GetLen())
+		hasRule = true
+	}
+
+	var minLen *uint64
+	if rules.HasMinLen() {
+		minLen = ptr(rules.GetMinLen())
+		hasRule = true
+	}
+
+	var maxLen *uint64
+	if rules.HasMaxLen() {
+		maxLen = ptr(rules.GetMaxLen())
+		hasRule = true
+	}
+
+	var compiledPattern *regexp.Regexp
+	var patternStr string
+	if rules.HasPattern() {
+		patternStr = rules.GetPattern()
+		var err error
+		compiledPattern, err = regexp.Compile(patternStr)
+		if err != nil {
+			return nil // bail to CEL
+		}
+		hasRule = true
+	}
+
+	var prefix []byte
+	var hasPrefix bool
+	if rules.HasPrefix() {
+		prefix = rules.GetPrefix()
+		hasPrefix = true
+		hasRule = true
+	}
+
+	var suffix []byte
+	var hasSuffix bool
+	if rules.HasSuffix() {
+		suffix = rules.GetSuffix()
+		hasSuffix = true
+		hasRule = true
+	}
+
+	var containsV []byte
+	var hasContain bool
+	if rules.HasContains() {
+		containsV = rules.GetContains()
+		hasContain = true
+		hasRule = true
+	}
+
+	var inVals [][]byte
+	if inVals = rules.GetIn(); len(inVals) > 0 {
+		hasRule = true
+	}
+
+	var notInVals [][]byte
+	if notInVals = rules.GetNotIn(); len(notInVals) > 0 {
+		hasRule = true
+	}
+
+	if !hasRule {
+		return nil
+	}
+
+	return nativeBytesEval{
+		base:        base,
+		constVal:    constVal,
+		hasConst:    hasConst,
+		exactLen:    exactLen,
+		minLen:      minLen,
+		maxLen:      maxLen,
+		pattern:     compiledPattern,
+		patternStr:  patternStr,
+		prefix:      prefix,
+		hasPrefix:   hasPrefix,
+		suffix:      suffix,
+		hasSuffix:   hasSuffix,
+		contains:    containsV,
+		hasContains: hasContain,
+		inVals:      inVals,
+		notInVals:   notInVals,
+	}
+}
+
+// formatBytesList formats a [][]byte to match CEL's list formatting.
+func formatBytesList(vals [][]byte) string {
+	parts := make([]string, len(vals))
+	for i, v := range vals {
+		parts[i] = fmt.Sprintf("b\"\\x%x\"", v)
+	}
+	return "[" + strings.Join(parts, ", ") + "]"
+}

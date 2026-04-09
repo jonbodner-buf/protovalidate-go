@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -36,23 +35,9 @@ type nativeBoolEval struct {
 
 func (n nativeBoolEval) Evaluate(_ protoreflect.Message, val protoreflect.Value, _ *validationConfig) error {
 	if val.Bool() != n.constVal {
-		return &ValidationError{Violations: []*Violation{{
-			Proto: validate.Violation_builder{
-				Field: n.fieldPath(),
-				Rule: n.rulePath(validate.FieldPath_builder{
-					Elements: []*validate.FieldPathElement{
-						fieldPathElement(boolRuleDesc),
-						fieldPathElement(boolConstDesc),
-					},
-				}.Build()),
-				RuleId:  proto.String("bool.const"),
-				Message: proto.String(fmt.Sprintf("value must equal %t", n.constVal)),
-			}.Build(),
-			FieldValue:      val,
-			FieldDescriptor: n.Descriptor,
-			RuleValue:       protoreflect.ValueOfBool(n.constVal),
-			RuleDescriptor:  boolConstDesc,
-		}}}
+		return n.newViolation(boolRuleDesc, boolConstDesc,
+			"bool.const", fmt.Sprintf("value must equal %t", n.constVal),
+			val, protoreflect.ValueOfBool(n.constVal))
 	}
 	return nil
 }

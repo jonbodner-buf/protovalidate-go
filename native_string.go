@@ -115,7 +115,7 @@ func (n nativeStringEval) Evaluate(_ protoreflect.Message, val protoreflect.Valu
 
 	// const
 	if n.constVal != nil && strVal != *n.constVal {
-		return n.violationErrStr(
+		return n.violationError(
 			"string.const",
 			fmt.Sprintf("value must equal `%s`", *n.constVal),
 			val,
@@ -126,7 +126,7 @@ func (n nativeStringEval) Evaluate(_ protoreflect.Message, val protoreflect.Valu
 
 	// pattern
 	if n.pattern != nil && !n.pattern.MatchString(strVal) {
-		return n.violationErrStr(
+		return n.violationError(
 			"string.pattern",
 			fmt.Sprintf("value does not match regex pattern `%s`", n.patternStr),
 			val,
@@ -137,7 +137,7 @@ func (n nativeStringEval) Evaluate(_ protoreflect.Message, val protoreflect.Valu
 
 	// prefix
 	if n.prefix != nil && !strings.HasPrefix(strVal, *n.prefix) {
-		return n.violationErrStr(
+		return n.violationError(
 			"string.prefix",
 			fmt.Sprintf("value does not have prefix `%s`", *n.prefix),
 			val,
@@ -148,7 +148,7 @@ func (n nativeStringEval) Evaluate(_ protoreflect.Message, val protoreflect.Valu
 
 	// suffix
 	if n.suffix != nil && !strings.HasSuffix(strVal, *n.suffix) {
-		return n.violationErrStr(
+		return n.violationError(
 			"string.suffix",
 			fmt.Sprintf("value does not have suffix `%s`", *n.suffix),
 			val,
@@ -159,7 +159,7 @@ func (n nativeStringEval) Evaluate(_ protoreflect.Message, val protoreflect.Valu
 
 	// contains
 	if n.contains != nil && !strings.Contains(strVal, *n.contains) {
-		return n.violationErrStr(
+		return n.violationError(
 			"string.contains",
 			fmt.Sprintf("value does not contain substring `%s`", *n.contains),
 			val,
@@ -170,7 +170,7 @@ func (n nativeStringEval) Evaluate(_ protoreflect.Message, val protoreflect.Valu
 
 	// not_contains
 	if n.notContains != nil && strings.Contains(strVal, *n.notContains) {
-		return n.violationErrStr(
+		return n.violationError(
 			"string.not_contains",
 			fmt.Sprintf("value contains substring `%s`", *n.notContains),
 			val,
@@ -181,7 +181,7 @@ func (n nativeStringEval) Evaluate(_ protoreflect.Message, val protoreflect.Valu
 
 	// in
 	if len(n.inVals) > 0 && !slices.Contains(n.inVals, strVal) {
-		return n.violationErrStr(
+		return n.violationError(
 			"string.in",
 			"value must be in list "+formatStringList(n.inVals),
 			val,
@@ -192,7 +192,7 @@ func (n nativeStringEval) Evaluate(_ protoreflect.Message, val protoreflect.Valu
 
 	// not_in
 	if len(n.notInVals) > 0 && slices.Contains(n.notInVals, strVal) {
-		return n.violationErrStr(
+		return n.violationError(
 			"string.not_in",
 			"value must not be in list "+formatStringList(n.notInVals),
 			val,
@@ -276,7 +276,7 @@ func (n nativeStringEval) evaluateLength(runeCount uint64, val protoreflect.Valu
 	return nil
 }
 
-func (n nativeStringEval) violationErrStr(
+func (n nativeStringEval) violationError(
 	ruleID string,
 	message string,
 	fieldValue protoreflect.Value,

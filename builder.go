@@ -543,6 +543,8 @@ func (bldr *builder) tryNativeRules(
 		return tryBuildNativeStringRules(base, rules.GetString())
 	case protoreflect.BoolKind:
 		return tryBuildNativeBoolRules(base, rules.GetBool())
+	case protoreflect.EnumKind:
+		return tryBuildNativeEnumRules(base, rules.GetEnum())
 	default:
 		return nil
 	}

@@ -317,7 +317,7 @@ func (n nativeNumericCompare[T]) Evaluate(_ protoreflect.Message, val protorefle
 	// const support
 	if n.constVal != nil {
 		if valT != *n.constVal {
-			return n.violationErr(
+			return n.violationError(
 				n.config.typeName+".const",
 				fmt.Sprintf("value must equal %v", *n.constVal),
 				val,
@@ -330,7 +330,7 @@ func (n nativeNumericCompare[T]) Evaluate(_ protoreflect.Message, val protorefle
 	// in support
 	if len(n.inVals) > 0 {
 		if !slices.Contains(n.inVals, valT) {
-			return n.violationErr(
+			return n.violationError(
 				n.config.typeName+".in",
 				"value must be in "+formatList(n.inVals),
 				val,
@@ -343,7 +343,7 @@ func (n nativeNumericCompare[T]) Evaluate(_ protoreflect.Message, val protorefle
 	// not in support
 	if len(n.notInVals) > 0 {
 		if slices.Contains(n.notInVals, valT) {
-			return n.violationErr(
+			return n.violationError(
 				n.config.typeName+".not_in",
 				"value must not be in "+formatList(n.notInVals),
 				val,
@@ -359,7 +359,7 @@ func (n nativeNumericCompare[T]) Evaluate(_ protoreflect.Message, val protorefle
 	switch {
 	case n.lower == lowerBoundNone:
 		if isNaN || n.aboveHi(valT) {
-			return n.violationErr(
+			return n.violationError(
 				n.gtltRule(),
 				"value must be "+n.hiMessage(),
 				val,
@@ -369,7 +369,7 @@ func (n nativeNumericCompare[T]) Evaluate(_ protoreflect.Message, val protorefle
 		}
 	case n.upper == upperBoundNone:
 		if isNaN || n.belowLo(valT) {
-			return n.violationErr(
+			return n.violationError(
 				n.gtltRule(),
 				"value must be "+n.loMessage(),
 				val,
@@ -385,7 +385,7 @@ func (n nativeNumericCompare[T]) Evaluate(_ protoreflect.Message, val protorefle
 			failure = isNaN || (n.aboveHi(valT) && n.belowLo(valT))
 		}
 		if failure {
-			return n.violationErr(
+			return n.violationError(
 				n.gtltRule(),
 				fmt.Sprintf("value must be %s %s %s", n.loMessage(), n.conjunction(), n.hiMessage()),
 				val,
@@ -397,7 +397,7 @@ func (n nativeNumericCompare[T]) Evaluate(_ protoreflect.Message, val protorefle
 	return nil
 }
 
-func (n nativeNumericCompare[T]) violationErr(
+func (n nativeNumericCompare[T]) violationError(
 	ruleID string,
 	message string,
 	fieldValue protoreflect.Value,

@@ -21,6 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/dynamicpb"
@@ -115,12 +116,73 @@ func TestDynamicRulesEndToEnd(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			// we are setting an environment variable to enable native rules, so we can't use parallel tests
-			msgType := newDynamicMessageType(t, "test.native", "PatternMsg", &descriptorpb.FieldDescriptorProto{
+			msgType := newDynamicMessageType(t, "test.native", "TestMessage", &descriptorpb.FieldDescriptorProto{
 				Name:    proto.String("value"),
 				Number:  proto.Int32(1),
 				Type:    d.typ,
 				Label:   descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
 				Options: fieldOpts(d.rule),
+			})
+			d.info.msgType = msgType
+			// first with CEL rules
+			t.Setenv("PV_NATIVE_RULES", "false")
+			dynamicMessageTester(t, d.info)
+			// now with native rules to validate they produce identical results
+			t.Setenv("PV_NATIVE_RULES", "true")
+			dynamicMessageTester(t, d.info)
+		})
+	}
+}
+
+func TestNativeEnum_EndToEnd(t *testing.T) {
+	// Build a proto with an enum field and const rule.
+	enumDesc := &descriptorpb.EnumDescriptorProto{
+		Name: proto.String("TestEnum"),
+		Value: []*descriptorpb.EnumValueDescriptorProto{
+			{Name: proto.String("UNSPECIFIED"), Number: proto.Int32(0)},
+			{Name: proto.String("VALUE_ONE"), Number: proto.Int32(1)},
+			{Name: proto.String("VALUE_TWO"), Number: proto.Int32(2)},
+		},
+	}
+	data := []struct {
+		name string
+		rule *validate.FieldRules
+		info dynamicMessageTesterInfo
+	}{
+		{
+			name: "enum_const",
+			rule: validate.FieldRules_builder{
+				Enum: validate.EnumRules_builder{Const: proto.Int32(1)}.Build(),
+			}.Build(),
+			info: dynamicMessageTesterInfo{
+				goodValue:         protoreflect.ValueOfEnum(1),
+				badValue:          protoreflect.ValueOfEnum(2),
+				failedRuleID:      "enum.const",
+				failedRuleMessage: "value must equal 1",
+			},
+		},
+		{
+			name: "enum_in",
+			rule: validate.FieldRules_builder{
+				Enum: validate.EnumRules_builder{In: []int32{1, 2}}.Build(),
+			}.Build(),
+			info: dynamicMessageTesterInfo{
+				goodValue:         protoreflect.ValueOfEnum(1),
+				badValue:          protoreflect.ValueOfEnum(3),
+				failedRuleID:      "enum.in",
+				failedRuleMessage: "value must be in list [1, 2]",
+			},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			msgType := newDynamicMessageTypeWithEnum(t, "test.native", "EnumMsg", enumDesc, &descriptorpb.FieldDescriptorProto{
+				Name:     proto.String("value"),
+				Number:   proto.Int32(1),
+				Type:     descriptorpb.FieldDescriptorProto_TYPE_ENUM.Enum(),
+				TypeName: proto.String(".test.native.TestEnum"),
+				Label:    descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
+				Options:  fieldOpts(d.rule),
 			})
 			d.info.msgType = msgType
 			// first with CEL rules
@@ -159,4 +221,38 @@ func dynamicMessageTester(t *testing.T, info dynamicMessageTesterInfo) {
 	require.Len(t, valErr.Violations, 1)
 	assert.Equal(t, info.failedRuleID, valErr.Violations[0].Proto.GetRuleId())
 	assert.Equal(t, info.failedRuleMessage, valErr.Violations[0].Proto.GetMessage())
+}
+
+// newDynamicMessageTypeWithEnum creates a dynamic message type that includes
+// an enum type definition.
+func newDynamicMessageTypeWithEnum(
+	t testing.TB,
+	pkg, name string,
+	enumDesc *descriptorpb.EnumDescriptorProto,
+	field *descriptorpb.FieldDescriptorProto,
+) protoreflect.MessageType {
+	t.Helper()
+
+	file := &descriptorpb.FileDescriptorProto{
+		Name:    proto.String(pkg + "." + name + ".proto"),
+		Package: proto.String(pkg),
+		Syntax:  proto.String("proto3"),
+		Dependency: []string{
+			"buf/validate/validate.proto",
+		},
+		EnumType: []*descriptorpb.EnumDescriptorProto{enumDesc},
+		MessageType: []*descriptorpb.DescriptorProto{{
+			Name:  proto.String(name),
+			Field: []*descriptorpb.FieldDescriptorProto{field},
+		}},
+	}
+
+	registry := newRegistryWithValidateProto(t)
+	fd, err := protodesc.FileOptions{}.New(file, registry)
+	require.NoError(t, err)
+
+	desc := fd.Messages().ByName(protoreflect.Name(name))
+	require.NotNil(t, desc)
+
+	return dynamicpb.NewMessageType(desc)
 }

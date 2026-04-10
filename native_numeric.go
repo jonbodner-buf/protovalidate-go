@@ -52,14 +52,15 @@ type numericRules[T numericValue] interface {
 // numericDescriptors bundles the field descriptors for a single numeric
 // rules type (e.g., Int32Rules). Used to construct violation rule paths.
 type numericDescriptors struct {
-	ruleDesc  protoreflect.FieldDescriptor // FieldRules.{type} (e.g., "int32")
-	gtDesc    protoreflect.FieldDescriptor
-	gteDesc   protoreflect.FieldDescriptor
-	ltDesc    protoreflect.FieldDescriptor
-	lteDesc   protoreflect.FieldDescriptor
-	constDesc protoreflect.FieldDescriptor
-	inDesc    protoreflect.FieldDescriptor
-	notInDesc protoreflect.FieldDescriptor
+	ruleDesc   protoreflect.FieldDescriptor // FieldRules.{type} (e.g., "int32")
+	gtDesc     protoreflect.FieldDescriptor
+	gteDesc    protoreflect.FieldDescriptor
+	ltDesc     protoreflect.FieldDescriptor
+	lteDesc    protoreflect.FieldDescriptor
+	constDesc  protoreflect.FieldDescriptor
+	inDesc     protoreflect.FieldDescriptor
+	notInDesc  protoreflect.FieldDescriptor
+	finiteDesc protoreflect.FieldDescriptor
 }
 
 func makeNumericDescriptors(
@@ -67,15 +68,20 @@ func makeNumericDescriptors(
 	rulesMsg protoreflect.ProtoMessage,
 ) numericDescriptors {
 	rulesDesc := rulesMsg.ProtoReflect().Descriptor()
+	var finiteDesc protoreflect.FieldDescriptor
+	if rulesDesc.Name() == "FloatRules" || rulesDesc.Name() == "DoubleRules" {
+		finiteDesc = rulesDesc.Fields().ByName("finite")
+	}
 	return numericDescriptors{
-		ruleDesc:  fieldRulesDesc.Fields().ByName(protoreflect.Name(fieldName)),
-		gtDesc:    rulesDesc.Fields().ByName("gt"),
-		gteDesc:   rulesDesc.Fields().ByName("gte"),
-		ltDesc:    rulesDesc.Fields().ByName("lt"),
-		lteDesc:   rulesDesc.Fields().ByName("lte"),
-		constDesc: rulesDesc.Fields().ByName("const"),
-		inDesc:    rulesDesc.Fields().ByName("in"),
-		notInDesc: rulesDesc.Fields().ByName("not_in"),
+		ruleDesc:   fieldRulesDesc.Fields().ByName(protoreflect.Name(fieldName)),
+		gtDesc:     rulesDesc.Fields().ByName("gt"),
+		gteDesc:    rulesDesc.Fields().ByName("gte"),
+		ltDesc:     rulesDesc.Fields().ByName("lt"),
+		lteDesc:    rulesDesc.Fields().ByName("lte"),
+		constDesc:  rulesDesc.Fields().ByName("const"),
+		inDesc:     rulesDesc.Fields().ByName("in"),
+		notInDesc:  rulesDesc.Fields().ByName("not_in"),
+		finiteDesc: finiteDesc,
 	}
 }
 
@@ -215,6 +221,7 @@ type nativeNumericCompare[T numericValue] struct {
 	constVal  *T         // constant value for comparison
 	inVals    []T        // slice of values for IN comparison
 	notInVals []T        // slice of values for NOT_IN comparison
+	finite    bool       // true if the value is finite (not NaN or Infinity)
 }
 
 // belowLo reports whether v violates the lower bound.
@@ -333,6 +340,14 @@ func (n nativeNumericCompare[T]) Evaluate(_ protoreflect.Message, val protorefle
 			val, n.config.makeRuleVal(valT))
 	}
 
+	// finite support
+	if n.finite && (math.IsNaN(float64(valT)) || math.IsInf(float64(valT), 0)) {
+		return n.newViolation(n.config.descs.ruleDesc, n.config.descs.finiteDesc,
+			n.config.typeName+".finite",
+			"value must be finite",
+			val, n.config.makeRuleVal(valT))
+	}
+
 	if n.lower == lowerBoundNone && n.upper == upperBoundNone {
 		return nil
 	}
@@ -433,6 +448,17 @@ func tryBuildNativeNumericRules[T numericValue, R numericRules[T]](
 		hasRule = true
 	}
 
+	type finiteInterface interface {
+		HasFinite() bool
+		GetFinite() bool
+	}
+
+	finite := false
+	if fi, ok := (any)(rules).(finiteInterface); ok {
+		finite = fi.GetFinite()
+		hasRule = true
+	}
+
 	if !hasRule {
 		return nil
 	}
@@ -447,6 +473,7 @@ func tryBuildNativeNumericRules[T numericValue, R numericRules[T]](
 		constVal:  constVal,
 		inVals:    inVals,
 		notInVals: notInVals,
+		finite:    finite,
 	}
 }
 

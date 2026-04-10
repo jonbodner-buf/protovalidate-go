@@ -364,6 +364,30 @@ func TestNativeFloatCompare(t *testing.T) {
 	})
 }
 
+func TestNativeFloatFinite(t *testing.T) {
+	t.Parallel()
+
+	rules := validate.FloatRules_builder{Finite: proto.Bool(true)}.Build()
+	eval := buildNativeNumeric(t, rules, floatConfig, descriptorpb.FieldDescriptorProto_TYPE_FLOAT)
+	require.NotNil(t, eval)
+
+	runNumericCases(t, eval, protoreflect.ValueOfFloat32, []numericTestCase[float32]{
+		{"pass_fail", []float32{0.1, 5, 9.9}, []float32{float32(math.NaN()), float32(math.Inf(1)), float32(math.Inf(-1))}, "float.finite"},
+	})
+}
+
+func TestNativeDoubleFinite(t *testing.T) {
+	t.Parallel()
+
+	rules := validate.DoubleRules_builder{Finite: proto.Bool(true)}.Build()
+	eval := buildNativeNumeric(t, rules, doubleConfig, descriptorpb.FieldDescriptorProto_TYPE_DOUBLE)
+	require.NotNil(t, eval)
+
+	runNumericCases(t, eval, protoreflect.ValueOfFloat64, []numericTestCase[float64]{
+		{"pass_fail", []float64{0.1, 5, 9.9}, []float64{math.NaN(), math.Inf(1), math.Inf(-1)}, "double.finite"},
+	})
+}
+
 func TestNativeFloat_NaN(t *testing.T) {
 	t.Parallel()
 

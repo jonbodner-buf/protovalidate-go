@@ -15,6 +15,7 @@
 package protovalidate
 
 import (
+	"math"
 	"testing"
 
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
@@ -71,6 +72,19 @@ func TestDynamicRulesEndToEnd(t *testing.T) {
 				badValue:          protoreflect.ValueOfFloat64(100),
 				failedRuleID:      "double.lt",
 				failedRuleMessage: "value must be less than 100",
+			},
+		},
+		{
+			name: "double_finite",
+			typ:  descriptorpb.FieldDescriptorProto_TYPE_DOUBLE.Enum(),
+			rule: validate.FieldRules_builder{
+				Double: validate.DoubleRules_builder{Finite: proto.Bool(true)}.Build(),
+			}.Build(),
+			info: dynamicMessageTesterInfo{
+				goodValue:         protoreflect.ValueOfFloat64(50),
+				badValue:          protoreflect.ValueOfFloat64(math.Inf(1)),
+				failedRuleID:      "double.finite",
+				failedRuleMessage: "value must be finite",
 			},
 		},
 		{

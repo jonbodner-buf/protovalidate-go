@@ -75,6 +75,67 @@ func isUnique(list protoreflect.List) bool {
 	if length <= 1 {
 		return true
 	}
+	// Fast path: type-specific maps avoid any-boxing allocations
+	switch list.Get(0).Interface().(type) {
+	case int32:
+		return isUniqueTyped[int32](list, length)
+	case int64:
+		return isUniqueTyped[int64](list, length)
+	case uint32:
+		return isUniqueTyped[uint32](list, length)
+	case uint64:
+		return isUniqueTyped[uint64](list, length)
+	case float32:
+		return isUniqueTyped[float32](list, length)
+	case float64:
+		return isUniqueTyped[float64](list, length)
+	case string:
+		return isUniqueTyped[string](list, length)
+	case bool:
+		return isUniqueTyped[bool](list, length)
+	case []byte:
+		return isUniqueBytes(list, length)
+	default:
+		return isUniqueAny(list, length) // fallback
+	}
+}
+
+func isUniqueTyped[T comparable](list protoreflect.List, length int) bool {
+	seen := make(map[T]struct{}, length)
+	for i := range length {
+		key, ok := list.Get(i).Interface().(T)
+		if !ok {
+			// should never happen, but just in case
+			return isUniqueAny(list, length)
+		}
+		if _, exists := seen[key]; exists {
+			return false
+		}
+		seen[key] = struct{}{}
+	}
+	return true
+}
+
+func isUniqueBytes(list protoreflect.List, length int) bool {
+	seen := make(map[string]struct{}, length)
+	for i := range length {
+		byteVal, ok := list.Get(i).Interface().([]byte)
+		if !ok {
+			// should never happen, but just in case
+			return isUniqueAny(list, length)
+		}
+		// []byte is not comparable; convert to string for use as map key.
+		// this is the same action performed by CEL in library.uniqueBytes
+		key := string(byteVal)
+		if _, exists := seen[key]; exists {
+			return false
+		}
+		seen[key] = struct{}{}
+	}
+	return true
+}
+
+func isUniqueAny(list protoreflect.List, length int) bool {
 	seen := make(map[any]struct{}, length)
 	for i := range length {
 		key := list.Get(i).Interface()

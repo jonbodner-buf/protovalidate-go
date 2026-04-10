@@ -182,7 +182,8 @@ func TestNativeBytes_EndToEnd(t *testing.T) {
 
 func buildNativeBytes(t testing.TB, rules *validate.BytesRules) evaluator {
 	t.Helper()
-	fdesc := newFieldDescriptor(t, descriptorpb.FieldDescriptorProto_TYPE_BYTES)
+	fdesc := newFieldDescriptor(t, descriptorpb.FieldDescriptorProto_TYPE_BYTES,
+		descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum())
 	b := base{
 		Descriptor:       fdesc,
 		FieldPathElement: fieldPathElement(fdesc),

@@ -27,7 +27,8 @@ import (
 
 func buildNativeString(t testing.TB, rules *validate.StringRules) evaluator {
 	t.Helper()
-	fdesc := newFieldDescriptor(t, descriptorpb.FieldDescriptorProto_TYPE_STRING)
+	fdesc := newFieldDescriptor(t, descriptorpb.FieldDescriptorProto_TYPE_STRING,
+		descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum())
 	b := base{
 		Descriptor:       fdesc,
 		FieldPathElement: fieldPathElement(fdesc),

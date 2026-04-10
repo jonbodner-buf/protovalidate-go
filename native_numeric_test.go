@@ -482,7 +482,8 @@ func buildNativeNumeric[T numericValue, R numericRules[T]](
 	fieldType descriptorpb.FieldDescriptorProto_Type,
 ) evaluator {
 	t.Helper()
-	fdesc := newFieldDescriptor(t, fieldType)
+	fdesc := newFieldDescriptor(t, fieldType,
+		descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum())
 	b := base{
 		Descriptor:       fdesc,
 		FieldPathElement: fieldPathElement(fdesc),
@@ -491,7 +492,7 @@ func buildNativeNumeric[T numericValue, R numericRules[T]](
 }
 
 // newFieldDescriptor creates a minimal field descriptor for a given proto type.
-func newFieldDescriptor(t testing.TB, fieldType descriptorpb.FieldDescriptorProto_Type) protoreflect.FieldDescriptor {
+func newFieldDescriptor(t testing.TB, fieldType descriptorpb.FieldDescriptorProto_Type, label *descriptorpb.FieldDescriptorProto_Label) protoreflect.FieldDescriptor {
 	t.Helper()
 	fileProto := &descriptorpb.FileDescriptorProto{
 		Name:    proto.String("test.proto"),
@@ -504,7 +505,7 @@ func newFieldDescriptor(t testing.TB, fieldType descriptorpb.FieldDescriptorProt
 						Name:   proto.String("val"),
 						Number: proto.Int32(1),
 						Type:   fieldType.Enum(),
-						Label:  descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
+						Label:  label,
 					},
 				},
 			},

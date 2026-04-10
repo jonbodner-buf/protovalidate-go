@@ -83,7 +83,8 @@ func TestNativeBoolTautology(t *testing.T) {
 
 func buildNativeBool(t testing.TB, rules *validate.BoolRules) evaluator {
 	t.Helper()
-	fdesc := newFieldDescriptor(t, descriptorpb.FieldDescriptorProto_TYPE_BOOL)
+	fdesc := newFieldDescriptor(t, descriptorpb.FieldDescriptorProto_TYPE_BOOL,
+		descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum())
 	b := base{
 		Descriptor:       fdesc,
 		FieldPathElement: fieldPathElement(fdesc),

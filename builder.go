@@ -468,6 +468,13 @@ func (bldr *builder) processStandardRules(
 
 	// put behind a feature flag to allow for testing.
 	if f, _ := os.LookupEnv("PV_NATIVE_RULES"); strings.EqualFold(f, "true") {
+		// Try native Go evaluators for repeated list-level rules (min_items, max_items, unique).
+		if fdesc.IsList() && valEval.NestedRule == nil {
+			if native := tryNativeRepeatedRules(newBase(valEval), rules.GetRepeated()); native != nil {
+				valEval.Append(native)
+				return nil
+			}
+		}
 		// Try native Go evaluators for known simple rules before falling back to CEL.
 		if native := bldr.tryNativeRules(fdesc, rules, valEval); native != nil {
 			valEval.Append(native)

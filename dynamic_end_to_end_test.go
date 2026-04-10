@@ -134,6 +134,115 @@ func TestDynamicRulesEndToEnd(t *testing.T) {
 	}
 }
 
+func TestDynamicRepeatedRulesEndToEnd(t *testing.T) {
+	data := []struct {
+		name      string
+		typ       *descriptorpb.FieldDescriptorProto_Type
+		rule      *validate.FieldRules
+		info      dynamicMessageTesterInfo
+		goodValue []int32
+		badValue  []int32
+	}{
+		{
+			name: "repeated_min_items",
+			typ:  descriptorpb.FieldDescriptorProto_TYPE_INT32.Enum(),
+			rule: validate.FieldRules_builder{
+				Repeated: validate.RepeatedRules_builder{MinItems: proto.Uint64(2)}.Build(),
+			}.Build(),
+			goodValue: []int32{1, 2, 3},
+			badValue:  []int32{1},
+			info: dynamicMessageTesterInfo{
+				failedRuleID:      "repeated.min_items",
+				failedRuleMessage: "value must contain at least 2 item(s)",
+			},
+		},
+		{
+			name: "repeated_max_items",
+			typ:  descriptorpb.FieldDescriptorProto_TYPE_INT32.Enum(),
+			rule: validate.FieldRules_builder{
+				Repeated: validate.RepeatedRules_builder{MaxItems: proto.Uint64(2)}.Build(),
+			}.Build(),
+			goodValue: []int32{1},
+			badValue:  []int32{1, 2, 3},
+			info: dynamicMessageTesterInfo{
+				failedRuleID:      "repeated.max_items",
+				failedRuleMessage: "value must contain no more than 2 item(s)",
+			},
+		},
+		{
+			name: "repeated_unique",
+			typ:  descriptorpb.FieldDescriptorProto_TYPE_INT32.Enum(),
+			rule: validate.FieldRules_builder{
+				Repeated: validate.RepeatedRules_builder{Unique: ptr(true)}.Build(),
+			}.Build(),
+			goodValue: []int32{1, 2, 3},
+			badValue:  []int32{1, 2, 1},
+			info: dynamicMessageTesterInfo{
+				failedRuleID:      "repeated.unique",
+				failedRuleMessage: "repeated value must contain unique items",
+			},
+		},
+		{
+			name: "repeated_unique_items",
+			typ:  descriptorpb.FieldDescriptorProto_TYPE_INT32.Enum(),
+			rule: validate.FieldRules_builder{
+				Repeated: validate.RepeatedRules_builder{Unique: proto.Bool(true), Items: validate.FieldRules_builder{Int32: validate.Int32Rules_builder{Gte: ptr(int32(2))}.Build()}.Build()}.Build(),
+			}.Build(),
+			goodValue: []int32{2, 4, 6},
+			badValue:  []int32{2, 1, 3},
+			info: dynamicMessageTesterInfo{
+				failedRuleID:      "int32.gte",
+				failedRuleMessage: "value must be greater than or equal to 2",
+			},
+		},
+		{
+			name: "repeated_unique_max_items",
+			typ:  descriptorpb.FieldDescriptorProto_TYPE_INT32.Enum(),
+			rule: validate.FieldRules_builder{
+				Repeated: validate.RepeatedRules_builder{Unique: proto.Bool(true), MaxItems: proto.Uint64(3), Items: validate.FieldRules_builder{Int32: validate.Int32Rules_builder{Gte: ptr(int32(2))}.Build()}.Build()}.Build(),
+			}.Build(),
+			goodValue: []int32{2, 4, 6},
+			badValue:  []int32{2, 6, 3, 5},
+			info: dynamicMessageTesterInfo{
+				failedRuleID:      "repeated.max_items",
+				failedRuleMessage: "value must contain no more than 3 item(s)",
+			},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			// we are setting an environment variable to enable native rules, so we can't use parallel tests
+			msgType := newDynamicMessageType(t, "test.native", "TestMessage", &descriptorpb.FieldDescriptorProto{
+				Name:    proto.String("value"),
+				Number:  proto.Int32(1),
+				Type:    d.typ,
+				Label:   descriptorpb.FieldDescriptorProto_LABEL_REPEATED.Enum(),
+				Options: fieldOpts(d.rule),
+			})
+			d.info.msgType = msgType
+			// make lists
+			template := dynamicpb.NewMessage(msgType.Descriptor())
+			goodList := template.NewField(msgType.Descriptor().Fields().ByName("value"))
+			for _, v := range d.goodValue {
+				goodList.List().Append(protoreflect.ValueOfInt32(v))
+			}
+			d.info.goodValue = goodList
+			badList := template.NewField(msgType.Descriptor().Fields().ByName("value"))
+			for _, v := range d.badValue {
+				badList.List().Append(protoreflect.ValueOfInt32(v))
+			}
+			d.info.badValue = badList
+
+			// first with CEL rules
+			t.Setenv("PV_NATIVE_RULES", "false")
+			dynamicMessageTester(t, d.info)
+			// now with native rules to validate they produce identical results
+			t.Setenv("PV_NATIVE_RULES", "true")
+			dynamicMessageTester(t, d.info)
+		})
+	}
+}
+
 func TestNativeEnum_EndToEnd(t *testing.T) {
 	// Build a proto with an enum field and const rule.
 	enumDesc := &descriptorpb.EnumDescriptorProto{

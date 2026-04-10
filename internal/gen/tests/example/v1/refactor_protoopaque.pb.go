@@ -305,6 +305,83 @@ func (b0 BenchGT_builder) Build() *BenchGT {
 	return m0
 }
 
+type BenchTestBytes struct {
+	state         protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_B1 []byte                 `protobuf:"bytes,1,opt,name=b1,proto3"`
+	xxx_hidden_B  []byte                 `protobuf:"bytes,4,opt,name=b,proto3"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BenchTestBytes) Reset() {
+	*x = BenchTestBytes{}
+	mi := &file_tests_example_v1_refactor_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BenchTestBytes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BenchTestBytes) ProtoMessage() {}
+
+func (x *BenchTestBytes) ProtoReflect() protoreflect.Message {
+	mi := &file_tests_example_v1_refactor_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *BenchTestBytes) GetB1() []byte {
+	if x != nil {
+		return x.xxx_hidden_B1
+	}
+	return nil
+}
+
+func (x *BenchTestBytes) GetB() []byte {
+	if x != nil {
+		return x.xxx_hidden_B
+	}
+	return nil
+}
+
+func (x *BenchTestBytes) SetB1(v []byte) {
+	if v == nil {
+		v = []byte{}
+	}
+	x.xxx_hidden_B1 = v
+}
+
+func (x *BenchTestBytes) SetB(v []byte) {
+	if v == nil {
+		v = []byte{}
+	}
+	x.xxx_hidden_B = v
+}
+
+type BenchTestBytes_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	B1 []byte
+	B  []byte
+}
+
+func (b0 BenchTestBytes_builder) Build() *BenchTestBytes {
+	m0 := &BenchTestBytes{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_B1 = b.B1
+	x.xxx_hidden_B = b.B
+	return m0
+}
+
 var File_tests_example_v1_refactor_proto protoreflect.FileDescriptor
 
 const file_tests_example_v1_refactor_proto_rawDesc = "" +
@@ -329,12 +406,16 @@ const file_tests_example_v1_refactor_proto_rawDesc = "" +
 	"\aconstgt\x18\x0e \x01(\x05B\x1f\xbaH\x06\x1a\x04\b\n" +
 	"(\x00\xca\xe66\x12\x12\x10{intrange:10,10}R\aconstgt\x128\n" +
 	"\ain_test\x18\x0f \x01(\x05B\x1f\xbaH\b\x1a\x060\x010\x030\x05\xca\xe66\x10\x12\x0e{intrange:3,3}R\x06inTest\x12?\n" +
-	"\vnot_in_test\x18\x10 \x01(\x05B\x1f\xbaH\b\x1a\x068\x018\x038\x05\xca\xe66\x10\x12\x0e{intrange:4,4}R\tnotInTestB\xcb\x01\n" +
+	"\vnot_in_test\x18\x10 \x01(\x05B\x1f\xbaH\b\x1a\x068\x018\x038\x05\xca\xe66\x10\x12\x0e{intrange:4,4}R\tnotInTest\"\\\n" +
+	"\x0eBenchTestBytes\x12%\n" +
+	"\x02b1\x18\x01 \x01(\fB\x15\xbaH\x12z\x10\x10\x01\x18\x04J\x0223J\x0245J\x0267R\x02b1\x12#\n" +
+	"\x01b\x18\x04 \x01(\fB\x15\xbaH\x12z\x10\x10\x02\x18\x02B\x0223B\x0245B\x0267R\x01bB\xcb\x01\n" +
 	"\x14com.tests.example.v1B\rRefactorProtoP\x01ZBbuf.build/go/protovalidate/internal/gen/tests/example/v1;examplev1\xa2\x02\x03TEX\xaa\x02\x10Tests.Example.V1\xca\x02\x10Tests\\Example\\V1\xe2\x02\x1cTests\\Example\\V1\\GPBMetadata\xea\x02\x12Tests::Example::V1b\x06proto3"
 
-var file_tests_example_v1_refactor_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_tests_example_v1_refactor_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_tests_example_v1_refactor_proto_goTypes = []any{
-	(*BenchGT)(nil), // 0: tests.example.v1.BenchGT
+	(*BenchGT)(nil),        // 0: tests.example.v1.BenchGT
+	(*BenchTestBytes)(nil), // 1: tests.example.v1.BenchTestBytes
 }
 var file_tests_example_v1_refactor_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -355,7 +436,7 @@ func file_tests_example_v1_refactor_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tests_example_v1_refactor_proto_rawDesc), len(file_tests_example_v1_refactor_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

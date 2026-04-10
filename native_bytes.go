@@ -242,11 +242,11 @@ func tryBuildNativeBytesRules(base base, rules *validate.BytesRules) evaluator {
 		hasRule = true
 	}
 
-	var containsV []byte
-	var hasContain bool
+	var contains []byte
+	var hasContains bool
 	if rules.HasContains() {
-		containsV = rules.GetContains()
-		hasContain = true
+		contains = rules.GetContains()
+		hasContains = true
 		hasRule = true
 	}
 
@@ -277,8 +277,8 @@ func tryBuildNativeBytesRules(base base, rules *validate.BytesRules) evaluator {
 		hasPrefix:   hasPrefix,
 		suffix:      suffix,
 		hasSuffix:   hasSuffix,
-		contains:    containsV,
-		hasContains: hasContain,
+		contains:    contains,
+		hasContains: hasContains,
 		inVals:      inVals,
 		notInVals:   notInVals,
 	}
@@ -288,7 +288,8 @@ func tryBuildNativeBytesRules(base base, rules *validate.BytesRules) evaluator {
 func formatBytesList(vals [][]byte) string {
 	parts := make([]string, len(vals))
 	for i, v := range vals {
-		parts[i] = fmt.Sprintf("b\"\\x%x\"", v)
+		// this is what CEL does for a byte slice; displays it as a string
+		parts[i] = string(v)
 	}
 	return "[" + strings.Join(parts, ", ") + "]"
 }

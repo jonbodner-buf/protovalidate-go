@@ -454,7 +454,7 @@ func tryBuildNativeNumericRules[T numericValue, R numericRules[T]](
 	}
 
 	finite := false
-	if fi, ok := (any)(rules).(finiteInterface); ok {
+	if fi, ok := (any)(rules).(finiteInterface); ok && fi.HasFinite() {
 		finite = fi.GetFinite()
 		hasRule = true
 	}

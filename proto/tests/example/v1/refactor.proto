@@ -86,11 +86,44 @@ message BenchGT {
     (gofakeit.generate).tag = "{intrange:10,10}"
   ];
   int32 in_test = 15 [
-    (buf.validate.field).int32 = { in: [1, 3, 5] },
+    (buf.validate.field).int32 = {
+      in: [
+        1,
+        3,
+        5
+      ]
+    },
     (gofakeit.generate).tag = "{intrange:3,3}"
   ];
   int32 not_in_test = 16 [
-    (buf.validate.field).int32 = { not_in: [1, 3, 5] },
+    (buf.validate.field).int32 = {
+      not_in: [
+        1,
+        3,
+        5
+      ]
+    },
     (gofakeit.generate).tag = "{intrange:4,4}"
   ];
+}
+
+message BenchTestBytes {
+  bytes b1 = 1 [(buf.validate.field).bytes = {
+    not_in: [
+      "\x32\x33",
+      "\x34\x35",
+      "\x36\x37"
+    ]
+    min_len: 1
+    max_len: 4
+  }];
+  bytes b = 4 [(buf.validate.field).bytes = {
+    in: [
+      "\x32\x33",
+      "\x34\x35",
+      "\x36\x37"
+    ]
+    min_len: 2
+    max_len: 2
+  }];
 }

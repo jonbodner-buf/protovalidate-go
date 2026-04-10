@@ -18,6 +18,8 @@ import (
 	"testing"
 
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	examplev1 "buf.build/go/protovalidate/internal/gen/tests/example/v1"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -26,6 +28,47 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 )
 
+func TestNativeBytes(t *testing.T) {
+	msg := examplev1.BenchTestBytes_builder{
+		B1: []byte{'\x32', '\x33'},
+		B:  []byte{'\x03', '\x04'},
+	}.Build()
+	// with PV off
+	t.Setenv("PV_NATIVE_RULES", "false")
+	val, err := New(WithMessages(msg), WithDisableLazy())
+	if err != nil {
+		t.Fatalf("native off: expected no error, got %v", err)
+	}
+	err = val.Validate(msg)
+	if err == nil {
+		t.Errorf("native off: expected error, got nil")
+	} else {
+		x := err.Error()
+		if diff := cmp.Diff(x, `validation errors:
+ - b1: value must not be in list [23, 45, 67]
+ - b: value must be in list [23, 45, 67]`); diff != "" {
+			t.Error("native off, difference in error: " + diff)
+		}
+	}
+
+	// with PV on
+	t.Setenv("PV_NATIVE_RULES", "true")
+	val, err = New(WithMessages(msg), WithDisableLazy())
+	if err != nil {
+		t.Fatalf("native on: expected no error, got %v", err)
+	}
+	err = val.Validate(msg)
+	if err == nil {
+		t.Errorf("native on: expected error, got nil")
+	} else {
+		x := err.Error()
+		if diff := cmp.Diff(x, `validation errors:
+ - b1: value must not be in list [23, 45, 67]
+ - b: value must be in list [23, 45, 67]`); diff != "" {
+			t.Error("native on, difference in error: " + diff)
+		}
+	}
+}
 func TestNativeBytesConst(t *testing.T) {
 	t.Parallel()
 	eval := buildNativeBytes(t, validate.BytesRules_builder{Const: []byte{0x01, 0x02}}.Build())

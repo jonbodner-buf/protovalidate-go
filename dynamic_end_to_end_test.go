@@ -140,10 +140,10 @@ func TestDynamicRulesEndToEnd(t *testing.T) {
 			d.info.msgType = msgType
 			// first with CEL rules
 			t.Setenv("PV_NATIVE_RULES", "false")
-			dynamicMessageTester(t, d.info)
+			dynamicMessageTester(t, d.info, "value")
 			// now with native rules to validate they produce identical results
 			t.Setenv("PV_NATIVE_RULES", "true")
-			dynamicMessageTester(t, d.info)
+			dynamicMessageTester(t, d.info, "value")
 		})
 	}
 }
@@ -249,10 +249,10 @@ func TestDynamicRepeatedRulesEndToEnd(t *testing.T) {
 
 			// first with CEL rules
 			t.Setenv("PV_NATIVE_RULES", "false")
-			dynamicMessageTester(t, d.info)
+			dynamicMessageTester(t, d.info, "value")
 			// now with native rules to validate they produce identical results
 			t.Setenv("PV_NATIVE_RULES", "true")
-			dynamicMessageTester(t, d.info)
+			dynamicMessageTester(t, d.info, "value")
 		})
 	}
 }
@@ -310,10 +310,80 @@ func TestNativeEnum_EndToEnd(t *testing.T) {
 			d.info.msgType = msgType
 			// first with CEL rules
 			t.Setenv("PV_NATIVE_RULES", "false")
-			dynamicMessageTester(t, d.info)
+			dynamicMessageTester(t, d.info, "value")
 			// now with native rules to validate they produce identical results
 			t.Setenv("PV_NATIVE_RULES", "true")
-			dynamicMessageTester(t, d.info)
+			dynamicMessageTester(t, d.info, "value")
+		})
+	}
+}
+
+func TestNativeMap_EndToEnd(t *testing.T) {
+	data := []struct {
+		name    string
+		rule    *validate.FieldRules
+		info    dynamicMessageTesterInfo
+		goodMap map[string]string
+		badMap  map[string]string
+	}{
+		{
+			name: "map_min_pairs",
+			rule: validate.FieldRules_builder{
+				Map: validate.MapRules_builder{MinPairs: proto.Uint64(2)}.Build(),
+			}.Build(),
+			info: dynamicMessageTesterInfo{
+				failedRuleID:      "map.min_pairs",
+				failedRuleMessage: "map must be at least 2 entries",
+			},
+			goodMap: map[string]string{"a": "1", "b": "2"},
+			badMap:  map[string]string{"a": "1"},
+		},
+		{
+			name: "map_max_pairs",
+			rule: validate.FieldRules_builder{
+				Map: validate.MapRules_builder{MaxPairs: proto.Uint64(2)}.Build(),
+			}.Build(),
+			info: dynamicMessageTesterInfo{
+				failedRuleID:      "map.max_pairs",
+				failedRuleMessage: "map must be at most 2 entries",
+			},
+			goodMap: map[string]string{"a": "1", "b": "2"},
+			badMap:  map[string]string{"a": "1", "b": "2", "c": "3"},
+		},
+	}
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			msgType := newDynamicMapMessageType(t, "test.native", "MapMsg",
+				descriptorpb.FieldDescriptorProto_TYPE_STRING,
+				descriptorpb.FieldDescriptorProto_TYPE_STRING,
+				d.rule,
+			)
+
+			d.info.msgType = msgType
+
+			template := dynamicpb.NewMessage(msgType.Descriptor())
+			fd := msgType.Descriptor().Fields().ByName("entries")
+			maker := func(m map[string]string) protoreflect.Value {
+				mapField := template.NewField(fd)
+				for k, v := range m {
+					mapField.Map().Set(
+						protoreflect.ValueOfString(k).MapKey(),
+						protoreflect.ValueOfString(v),
+					)
+				}
+				return mapField
+			}
+			// make a good map
+			d.info.goodValue = maker(d.goodMap)
+			// make a bad map
+			d.info.badValue = maker(d.badMap)
+
+			// first with CEL rules
+			t.Setenv("PV_NATIVE_RULES", "false")
+			dynamicMessageTester(t, d.info, "entries")
+			// now with native rules to validate they produce identical results
+			t.Setenv("PV_NATIVE_RULES", "true")
+			dynamicMessageTester(t, d.info, "entries")
 		})
 	}
 }
@@ -326,17 +396,17 @@ type dynamicMessageTesterInfo struct {
 	failedRuleMessage string
 }
 
-func dynamicMessageTester(t *testing.T, info dynamicMessageTesterInfo) {
+func dynamicMessageTester(t *testing.T, info dynamicMessageTesterInfo, fieldName protoreflect.Name) {
 	t.Helper()
 	validator, err := New(WithDisableLazy(), WithMessageDescriptors(info.msgType.Descriptor()))
 	require.NoError(t, err)
 
 	passing := dynamicpb.NewMessage(info.msgType.Descriptor())
-	passing.Set(info.msgType.Descriptor().Fields().ByName("value"), info.goodValue)
+	passing.Set(info.msgType.Descriptor().Fields().ByName(fieldName), info.goodValue)
 	require.NoError(t, validator.Validate(passing))
 
 	failing := dynamicpb.NewMessage(info.msgType.Descriptor())
-	failing.Set(info.msgType.Descriptor().Fields().ByName("value"), info.badValue)
+	failing.Set(info.msgType.Descriptor().Fields().ByName(fieldName), info.badValue)
 	err = validator.Validate(failing)
 	require.Error(t, err)
 	var valErr *ValidationError

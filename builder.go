@@ -467,10 +467,19 @@ func (bldr *builder) processStandardRules(
 	}
 
 	// put behind a feature flag to allow for testing.
+	// it's easier to follow like this, don't break it up
+	//nolint:nestif
 	if f, _ := os.LookupEnv("PV_NATIVE_RULES"); strings.EqualFold(f, "true") {
 		// Try native Go evaluators for repeated list-level rules (min_items, max_items, unique).
 		if fdesc.IsList() && valEval.NestedRule == nil {
 			if native := tryNativeRepeatedRules(newBase(valEval), rules.GetRepeated()); native != nil {
+				valEval.Append(native)
+				return nil
+			}
+		}
+		// Try native Go evaluators for map-level rules (min_pairs, max_pairs).
+		if fdesc.IsMap() && valEval.NestedRule == nil {
+			if native := tryNativeMapRules(newBase(valEval), rules.GetMap()); native != nil {
 				valEval.Append(native)
 				return nil
 			}

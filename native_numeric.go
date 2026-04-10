@@ -554,18 +554,12 @@ func tryBuildNativeFloatRules(base base, rules *validate.FloatRules) evaluator {
 	if rules == nil {
 		return nil
 	}
-	if rules.HasFinite() {
-		return nil // bail to CEL for finite check
-	}
 	return tryBuildNativeNumericRules(base, rules, floatConfig)
 }
 
 func tryBuildNativeDoubleRules(base base, rules *validate.DoubleRules) evaluator {
 	if rules == nil {
 		return nil
-	}
-	if rules.HasFinite() {
-		return nil // bail to CEL for finite check
 	}
 	return tryBuildNativeNumericRules(base, rules, doubleConfig)
 }

@@ -67,6 +67,39 @@ func TestComplexSchema(t *testing.T) {
 	testSuccess(t, &pb.BenchComplexSchema{})
 }
 
+func TestMap(t *testing.T) {
+	t.Parallel()
+	testSuccess(t, &pb.BenchMap{})
+}
+
+func TestScalar(t *testing.T) {
+	t.Parallel()
+	testSuccess(t, &pb.BenchScalar{})
+}
+
+func TestRepeated(t *testing.T) {
+	t.Parallel()
+	t.Run("Scalar", func(t *testing.T) {
+		t.Parallel()
+		testSuccess(t, &pb.BenchRepeatedScalar{})
+	})
+	t.Run("Message", func(t *testing.T) {
+		t.Parallel()
+		testSuccess(t, &pb.BenchRepeatedMessage{})
+	})
+	t.Run("Unique", func(t *testing.T) {
+		t.Parallel()
+		t.Run("Scalar", func(t *testing.T) {
+			t.Parallel()
+			testSuccess(t, &pb.BenchRepeatedScalarUnique{})
+		})
+		t.Run("Bytes", func(t *testing.T) {
+			t.Parallel()
+			testSuccess(t, &pb.BenchRepeatedBytesUnique{})
+		})
+	})
+}
+
 func BenchmarkCompile(b *testing.B) {
 	// Measures compile-time allocations for complex schemas
 	msg := &pb.BenchComplexSchema{}

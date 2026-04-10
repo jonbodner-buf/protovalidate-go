@@ -411,11 +411,13 @@ func TestNativeFloat_NaN(t *testing.T) {
 	}
 }
 
-func TestNativeFloat_FiniteBailsToCEL(t *testing.T) {
+func TestNativeFloat_FiniteDoesNotBailToCEL(t *testing.T) {
 	t.Parallel()
 	rules := validate.FloatRules_builder{Finite: proto.Bool(true), Gt: proto.Float32(0)}.Build()
 	eval := tryBuildNativeFloatRules(base{}, rules)
-	assert.Nil(t, eval, "finite rules should bail to CEL")
+	if eval == nil {
+		t.Error("finite rules should have native implementation")
+	}
 }
 
 // --- Double ---

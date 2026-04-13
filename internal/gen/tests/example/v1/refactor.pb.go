@@ -38,6 +38,53 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type TestEnum int32
+
+const (
+	TestEnum_TEST_ENUM_UNSPECIFIED TestEnum = 0
+	TestEnum_TEST_ENUM_VAL1        TestEnum = 1
+	TestEnum_TEST_ENUM_VAL2        TestEnum = 2
+	TestEnum_TEST_ENUM_VAL3        TestEnum = 3
+)
+
+// Enum value maps for TestEnum.
+var (
+	TestEnum_name = map[int32]string{
+		0: "TEST_ENUM_UNSPECIFIED",
+		1: "TEST_ENUM_VAL1",
+		2: "TEST_ENUM_VAL2",
+		3: "TEST_ENUM_VAL3",
+	}
+	TestEnum_value = map[string]int32{
+		"TEST_ENUM_UNSPECIFIED": 0,
+		"TEST_ENUM_VAL1":        1,
+		"TEST_ENUM_VAL2":        2,
+		"TEST_ENUM_VAL3":        3,
+	}
+)
+
+func (x TestEnum) Enum() *TestEnum {
+	p := new(TestEnum)
+	*p = x
+	return p
+}
+
+func (x TestEnum) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TestEnum) Descriptor() protoreflect.EnumDescriptor {
+	return file_tests_example_v1_refactor_proto_enumTypes[0].Descriptor()
+}
+
+func (TestEnum) Type() protoreflect.EnumType {
+	return &file_tests_example_v1_refactor_proto_enumTypes[0]
+}
+
+func (x TestEnum) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
 type BenchGT struct {
 	state         protoimpl.MessageState `protogen:"hybrid.v1"`
 	Gt            int32                  `protobuf:"varint,1,opt,name=gt,proto3" json:"gt,omitempty"`
@@ -382,6 +429,63 @@ func (b0 BenchTestBytes_builder) Build() *BenchTestBytes {
 	return m0
 }
 
+type TestUnique struct {
+	state         protoimpl.MessageState `protogen:"hybrid.v1"`
+	Enums         []TestEnum             `protobuf:"varint,1,rep,packed,name=enums,proto3,enum=tests.example.v1.TestEnum" json:"enums,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TestUnique) Reset() {
+	*x = TestUnique{}
+	mi := &file_tests_example_v1_refactor_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TestUnique) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TestUnique) ProtoMessage() {}
+
+func (x *TestUnique) ProtoReflect() protoreflect.Message {
+	mi := &file_tests_example_v1_refactor_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *TestUnique) GetEnums() []TestEnum {
+	if x != nil {
+		return x.Enums
+	}
+	return nil
+}
+
+func (x *TestUnique) SetEnums(v []TestEnum) {
+	x.Enums = v
+}
+
+type TestUnique_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Enums []TestEnum
+}
+
+func (b0 TestUnique_builder) Build() *TestUnique {
+	m0 := &TestUnique{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.Enums = b.Enums
+	return m0
+}
+
 var File_tests_example_v1_refactor_proto protoreflect.FileDescriptor
 
 const file_tests_example_v1_refactor_proto_rawDesc = "" +
@@ -409,20 +513,32 @@ const file_tests_example_v1_refactor_proto_rawDesc = "" +
 	"\vnot_in_test\x18\x10 \x01(\x05B\x1f\xbaH\b\x1a\x068\x018\x038\x05\xca\xe66\x10\x12\x0e{intrange:4,4}R\tnotInTest\"\\\n" +
 	"\x0eBenchTestBytes\x12%\n" +
 	"\x02b1\x18\x01 \x01(\fB\x15\xbaH\x12z\x10\x10\x01\x18\x04J\x0223J\x0245J\x0267R\x02b1\x12#\n" +
-	"\x01b\x18\x04 \x01(\fB\x15\xbaH\x12z\x10\x10\x02\x18\x02B\x0223B\x0245B\x0267R\x01bB\xcb\x01\n" +
+	"\x01b\x18\x04 \x01(\fB\x15\xbaH\x12z\x10\x10\x02\x18\x02B\x0223B\x0245B\x0267R\x01b\"H\n" +
+	"\n" +
+	"TestUnique\x12:\n" +
+	"\x05enums\x18\x01 \x03(\x0e2\x1a.tests.example.v1.TestEnumB\b\xbaH\x05\x92\x01\x02\x18\x01R\x05enums*a\n" +
+	"\bTestEnum\x12\x19\n" +
+	"\x15TEST_ENUM_UNSPECIFIED\x10\x00\x12\x12\n" +
+	"\x0eTEST_ENUM_VAL1\x10\x01\x12\x12\n" +
+	"\x0eTEST_ENUM_VAL2\x10\x02\x12\x12\n" +
+	"\x0eTEST_ENUM_VAL3\x10\x03B\xcb\x01\n" +
 	"\x14com.tests.example.v1B\rRefactorProtoP\x01ZBbuf.build/go/protovalidate/internal/gen/tests/example/v1;examplev1\xa2\x02\x03TEX\xaa\x02\x10Tests.Example.V1\xca\x02\x10Tests\\Example\\V1\xe2\x02\x1cTests\\Example\\V1\\GPBMetadata\xea\x02\x12Tests::Example::V1b\x06proto3"
 
-var file_tests_example_v1_refactor_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_tests_example_v1_refactor_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_tests_example_v1_refactor_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_tests_example_v1_refactor_proto_goTypes = []any{
-	(*BenchGT)(nil),        // 0: tests.example.v1.BenchGT
-	(*BenchTestBytes)(nil), // 1: tests.example.v1.BenchTestBytes
+	(TestEnum)(0),          // 0: tests.example.v1.TestEnum
+	(*BenchGT)(nil),        // 1: tests.example.v1.BenchGT
+	(*BenchTestBytes)(nil), // 2: tests.example.v1.BenchTestBytes
+	(*TestUnique)(nil),     // 3: tests.example.v1.TestUnique
 }
 var file_tests_example_v1_refactor_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0, // 0: tests.example.v1.TestUnique.enums:type_name -> tests.example.v1.TestEnum
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_tests_example_v1_refactor_proto_init() }
@@ -435,13 +551,14 @@ func file_tests_example_v1_refactor_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tests_example_v1_refactor_proto_rawDesc), len(file_tests_example_v1_refactor_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   2,
+			NumEnums:      1,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_tests_example_v1_refactor_proto_goTypes,
 		DependencyIndexes: file_tests_example_v1_refactor_proto_depIdxs,
+		EnumInfos:         file_tests_example_v1_refactor_proto_enumTypes,
 		MessageInfos:      file_tests_example_v1_refactor_proto_msgTypes,
 	}.Build()
 	File_tests_example_v1_refactor_proto = out.File

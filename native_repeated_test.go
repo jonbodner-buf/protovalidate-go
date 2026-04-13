@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	examplev1 "buf.build/go/protovalidate/internal/gen/tests/example/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -121,6 +122,38 @@ func TestTryNativeRepeatedRules_ReturnsNil(t *testing.T) {
 			t.Parallel()
 			assert.Nil(t, tryNativeRepeatedRules(base{}, tt.rules))
 		})
+	}
+}
+
+func TestNativeUniqueEnums(t *testing.T) {
+	t.Parallel()
+	// should fail
+	{
+		msg := examplev1.TestUnique_builder{
+			Enums: []examplev1.TestEnum{
+				examplev1.TestEnum_TEST_ENUM_VAL1,
+				examplev1.TestEnum_TEST_ENUM_VAL1,
+				examplev1.TestEnum_TEST_ENUM_VAL2,
+				examplev1.TestEnum_TEST_ENUM_VAL3,
+			},
+		}.Build()
+		validator, err := New(WithDisableLazy(), WithMessageDescriptors(msg.ProtoReflect().Descriptor()))
+		require.NoError(t, err)
+		require.Error(t, validator.Validate(msg))
+	}
+
+	// should pass
+	{
+		msg := examplev1.TestUnique_builder{
+			Enums: []examplev1.TestEnum{
+				examplev1.TestEnum_TEST_ENUM_VAL1,
+				examplev1.TestEnum_TEST_ENUM_VAL2,
+				examplev1.TestEnum_TEST_ENUM_VAL3,
+			},
+		}.Build()
+		validator, err := New(WithDisableLazy(), WithMessageDescriptors(msg.ProtoReflect().Descriptor()))
+		require.NoError(t, err)
+		require.NoError(t, validator.Validate(msg))
 	}
 }
 

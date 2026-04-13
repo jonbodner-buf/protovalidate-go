@@ -127,3 +127,14 @@ message BenchTestBytes {
     max_len: 2
   }];
 }
+
+enum TestEnum {
+  TEST_ENUM_UNSPECIFIED = 0;
+  TEST_ENUM_VAL1 = 1;
+  TEST_ENUM_VAL2 = 2;
+  TEST_ENUM_VAL3 = 3;
+}
+
+message TestUnique {
+  repeated TestEnum enums = 1 [(buf.validate.field).repeated.unique = true];
+}

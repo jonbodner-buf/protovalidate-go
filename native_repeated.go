@@ -75,7 +75,7 @@ func isUnique(list protoreflect.List) bool {
 	if length <= 1 {
 		return true
 	}
-	// Fast path: type-specific maps avoid any-boxing allocations
+	// type-specific maps avoid any-boxing allocations
 	switch list.Get(0).Interface().(type) {
 	case int32:
 		return isUniqueTyped[int32](list, length)
@@ -93,10 +93,12 @@ func isUnique(list protoreflect.List) bool {
 		return isUniqueTyped[string](list, length)
 	case bool:
 		return isUniqueTyped[bool](list, length)
+	case protoreflect.EnumNumber:
+		return isUniqueTyped[protoreflect.EnumNumber](list, length)
 	case []byte:
 		return isUniqueBytes(list, length)
 	default:
-		return isUniqueAny(list, length) // fallback
+		return false // message, list, and map types are not supported, only enum and scalars
 	}
 }
 
@@ -106,7 +108,7 @@ func isUniqueTyped[T comparable](list protoreflect.List, length int) bool {
 		key, ok := list.Get(i).Interface().(T)
 		if !ok {
 			// should never happen, but just in case
-			return isUniqueAny(list, length)
+			return false
 		}
 		if _, exists := seen[key]; exists {
 			return false
@@ -119,31 +121,10 @@ func isUniqueTyped[T comparable](list protoreflect.List, length int) bool {
 func isUniqueBytes(list protoreflect.List, length int) bool {
 	seen := make(map[string]struct{}, length)
 	for i := range length {
-		byteVal, ok := list.Get(i).Interface().([]byte)
-		if !ok {
-			// should never happen, but just in case
-			return isUniqueAny(list, length)
-		}
+		byteVal := list.Get(i).Bytes()
 		// []byte is not comparable; convert to string for use as map key.
 		// this is the same action performed by CEL in library.uniqueBytes
 		key := string(byteVal)
-		if _, exists := seen[key]; exists {
-			return false
-		}
-		seen[key] = struct{}{}
-	}
-	return true
-}
-
-func isUniqueAny(list protoreflect.List, length int) bool {
-	seen := make(map[any]struct{}, length)
-	for i := range length {
-		key := list.Get(i).Interface()
-		// []byte is not comparable; convert to string for use as map key.
-		// this is the same action performed by CEL in library.uniqueBytes
-		if b, ok := key.([]byte); ok {
-			key = string(b)
-		}
 		if _, exists := seen[key]; exists {
 			return false
 		}

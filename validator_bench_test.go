@@ -57,6 +57,10 @@ func BenchmarkInt32GT(b *testing.B) {
 	benchSuccess(b, &pb.BenchGT{})
 }
 
+func BenchmarkTestByteMatching(b *testing.B) {
+	benchSuccess(b, &pb.TestByteMatching{})
+}
+
 func TestInt32GT(t *testing.T) {
 	t.Parallel()
 	testSuccess(t, &pb.BenchGT{})
@@ -75,6 +79,11 @@ func TestMap(t *testing.T) {
 func TestScalar(t *testing.T) {
 	t.Parallel()
 	testSuccess(t, &pb.BenchScalar{})
+}
+
+func TestByteMatching(t *testing.T) {
+	t.Parallel()
+	testSuccess(t, &pb.TestByteMatching{})
 }
 
 func TestRepeated(t *testing.T) {

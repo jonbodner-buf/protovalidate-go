@@ -44,6 +44,7 @@ type stringDescriptors struct {
 	notInDesc       protoreflect.FieldDescriptor
 }
 
+//nolint:dupl
 func makeStringDescriptors() stringDescriptors {
 	rulesDesc := (*validate.StringRules)(nil).ProtoReflect().Descriptor()
 	return stringDescriptors{

@@ -138,3 +138,22 @@ enum TestEnum {
 message TestUnique {
   repeated TestEnum enums = 1 [(buf.validate.field).repeated.unique = true];
 }
+
+message TestByteMatching {
+  bytes ip_addr = 1 [
+    (buf.validate.field).bytes.ip = true,
+    (gofakeit.generate).tag = "1234567890123456"
+  ];
+  bytes ipv4_addr = 2 [
+    (buf.validate.field).bytes.ipv4 = true,
+    (gofakeit.generate).tag = "1234"
+  ];
+  bytes ipv6_addr = 3 [
+    (buf.validate.field).bytes.ipv6 = true,
+    (gofakeit.generate).tag = "1234567890123456"
+  ];
+  bytes uuid = 4 [
+    (buf.validate.field).bytes.uuid = true,
+    (gofakeit.generate).tag = "1234567890123456"
+  ];
+}

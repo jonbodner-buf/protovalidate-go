@@ -486,6 +486,117 @@ func (b0 TestUnique_builder) Build() *TestUnique {
 	return m0
 }
 
+type TestByteMatching struct {
+	state         protoimpl.MessageState `protogen:"hybrid.v1"`
+	IpAddr        []byte                 `protobuf:"bytes,1,opt,name=ip_addr,json=ipAddr,proto3" json:"ip_addr,omitempty"`
+	Ipv4Addr      []byte                 `protobuf:"bytes,2,opt,name=ipv4_addr,json=ipv4Addr,proto3" json:"ipv4_addr,omitempty"`
+	Ipv6Addr      []byte                 `protobuf:"bytes,3,opt,name=ipv6_addr,json=ipv6Addr,proto3" json:"ipv6_addr,omitempty"`
+	Uuid          []byte                 `protobuf:"bytes,4,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TestByteMatching) Reset() {
+	*x = TestByteMatching{}
+	mi := &file_tests_example_v1_refactor_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TestByteMatching) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TestByteMatching) ProtoMessage() {}
+
+func (x *TestByteMatching) ProtoReflect() protoreflect.Message {
+	mi := &file_tests_example_v1_refactor_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *TestByteMatching) GetIpAddr() []byte {
+	if x != nil {
+		return x.IpAddr
+	}
+	return nil
+}
+
+func (x *TestByteMatching) GetIpv4Addr() []byte {
+	if x != nil {
+		return x.Ipv4Addr
+	}
+	return nil
+}
+
+func (x *TestByteMatching) GetIpv6Addr() []byte {
+	if x != nil {
+		return x.Ipv6Addr
+	}
+	return nil
+}
+
+func (x *TestByteMatching) GetUuid() []byte {
+	if x != nil {
+		return x.Uuid
+	}
+	return nil
+}
+
+func (x *TestByteMatching) SetIpAddr(v []byte) {
+	if v == nil {
+		v = []byte{}
+	}
+	x.IpAddr = v
+}
+
+func (x *TestByteMatching) SetIpv4Addr(v []byte) {
+	if v == nil {
+		v = []byte{}
+	}
+	x.Ipv4Addr = v
+}
+
+func (x *TestByteMatching) SetIpv6Addr(v []byte) {
+	if v == nil {
+		v = []byte{}
+	}
+	x.Ipv6Addr = v
+}
+
+func (x *TestByteMatching) SetUuid(v []byte) {
+	if v == nil {
+		v = []byte{}
+	}
+	x.Uuid = v
+}
+
+type TestByteMatching_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	IpAddr   []byte
+	Ipv4Addr []byte
+	Ipv6Addr []byte
+	Uuid     []byte
+}
+
+func (b0 TestByteMatching_builder) Build() *TestByteMatching {
+	m0 := &TestByteMatching{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.IpAddr = b.IpAddr
+	x.Ipv4Addr = b.Ipv4Addr
+	x.Ipv6Addr = b.Ipv6Addr
+	x.Uuid = b.Uuid
+	return m0
+}
+
 var File_tests_example_v1_refactor_proto protoreflect.FileDescriptor
 
 const file_tests_example_v1_refactor_proto_rawDesc = "" +
@@ -516,7 +627,12 @@ const file_tests_example_v1_refactor_proto_rawDesc = "" +
 	"\x01b\x18\x04 \x01(\fB\x15\xbaH\x12z\x10\x10\x02\x18\x02B\x0223B\x0245B\x0267R\x01b\"H\n" +
 	"\n" +
 	"TestUnique\x12:\n" +
-	"\x05enums\x18\x01 \x03(\x0e2\x1a.tests.example.v1.TestEnumB\b\xbaH\x05\x92\x01\x02\x18\x01R\x05enums*a\n" +
+	"\x05enums\x18\x01 \x03(\x0e2\x1a.tests.example.v1.TestEnumB\b\xbaH\x05\x92\x01\x02\x18\x01R\x05enums\"\xe9\x01\n" +
+	"\x10TestByteMatching\x126\n" +
+	"\aip_addr\x18\x01 \x01(\fB\x1d\xbaH\x04z\x02P\x01\xca\xe66\x12\x12\x101234567890123456R\x06ipAddr\x12.\n" +
+	"\tipv4_addr\x18\x02 \x01(\fB\x11\xbaH\x04z\x02X\x01\xca\xe66\x06\x12\x041234R\bipv4Addr\x12:\n" +
+	"\tipv6_addr\x18\x03 \x01(\fB\x1d\xbaH\x04z\x02`\x01\xca\xe66\x12\x12\x101234567890123456R\bipv6Addr\x121\n" +
+	"\x04uuid\x18\x04 \x01(\fB\x1d\xbaH\x04z\x02x\x01\xca\xe66\x12\x12\x101234567890123456R\x04uuid*a\n" +
 	"\bTestEnum\x12\x19\n" +
 	"\x15TEST_ENUM_UNSPECIFIED\x10\x00\x12\x12\n" +
 	"\x0eTEST_ENUM_VAL1\x10\x01\x12\x12\n" +
@@ -525,12 +641,13 @@ const file_tests_example_v1_refactor_proto_rawDesc = "" +
 	"\x14com.tests.example.v1B\rRefactorProtoP\x01ZBbuf.build/go/protovalidate/internal/gen/tests/example/v1;examplev1\xa2\x02\x03TEX\xaa\x02\x10Tests.Example.V1\xca\x02\x10Tests\\Example\\V1\xe2\x02\x1cTests\\Example\\V1\\GPBMetadata\xea\x02\x12Tests::Example::V1b\x06proto3"
 
 var file_tests_example_v1_refactor_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_tests_example_v1_refactor_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_tests_example_v1_refactor_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_tests_example_v1_refactor_proto_goTypes = []any{
-	(TestEnum)(0),          // 0: tests.example.v1.TestEnum
-	(*BenchGT)(nil),        // 1: tests.example.v1.BenchGT
-	(*BenchTestBytes)(nil), // 2: tests.example.v1.BenchTestBytes
-	(*TestUnique)(nil),     // 3: tests.example.v1.TestUnique
+	(TestEnum)(0),            // 0: tests.example.v1.TestEnum
+	(*BenchGT)(nil),          // 1: tests.example.v1.BenchGT
+	(*BenchTestBytes)(nil),   // 2: tests.example.v1.BenchTestBytes
+	(*TestUnique)(nil),       // 3: tests.example.v1.TestUnique
+	(*TestByteMatching)(nil), // 4: tests.example.v1.TestByteMatching
 }
 var file_tests_example_v1_refactor_proto_depIdxs = []int32{
 	0, // 0: tests.example.v1.TestUnique.enums:type_name -> tests.example.v1.TestEnum
@@ -552,7 +669,7 @@ func file_tests_example_v1_refactor_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tests_example_v1_refactor_proto_rawDesc), len(file_tests_example_v1_refactor_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

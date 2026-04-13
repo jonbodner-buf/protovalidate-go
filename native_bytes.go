@@ -27,6 +27,53 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// bytesWellKnown identifies which well-known bytes format constraint is active.
+type bytesWellKnown struct {
+	desc                protoreflect.FieldDescriptor
+	ruleID, emptyRuleID string
+	mainMsg, emptyMsg   string
+	validSizes          []int
+}
+
+var (
+	//nolint:gochecknoglobals
+	bytesWellKnownIP = bytesWellKnown{
+		desc:        bytesDescs.ipDesc,
+		ruleID:      "bytes.ip",
+		emptyRuleID: "bytes.ip_empty",
+		mainMsg:     "value must be a valid IP address",
+		emptyMsg:    "value is empty, which is not a valid IP address",
+		validSizes:  []int{4, 16},
+	}
+	//nolint:gochecknoglobals
+	bytesWellKnownIPv4 = bytesWellKnown{
+		desc:        bytesDescs.ipv4Desc,
+		ruleID:      "bytes.ipv4",
+		emptyRuleID: "bytes.ipv4_empty",
+		mainMsg:     "value must be a valid IPv4 address",
+		emptyMsg:    "value is empty, which is not a valid IPv4 address",
+		validSizes:  []int{4},
+	}
+	//nolint:gochecknoglobals
+	bytesWellKnownIPv6 = bytesWellKnown{
+		desc:        bytesDescs.ipv6Desc,
+		ruleID:      "bytes.ipv6",
+		emptyRuleID: "bytes.ipv6_empty",
+		mainMsg:     "value must be a valid IPv6 address",
+		emptyMsg:    "value is empty, which is not a valid IPv6 address",
+		validSizes:  []int{16},
+	}
+	//nolint:gochecknoglobals
+	bytesWellKnownUUID = bytesWellKnown{
+		desc:        bytesDescs.uuidDesc,
+		ruleID:      "bytes.uuid",
+		emptyRuleID: "bytes.uuid_empty",
+		mainMsg:     "value must be a valid UUID",
+		emptyMsg:    "value is empty, which is not a valid UUID",
+		validSizes:  []int{16},
+	}
+)
+
 // bytesDescriptors bundles the field descriptors for BytesRules.
 type bytesDescriptors struct {
 	ruleDesc     protoreflect.FieldDescriptor
@@ -40,8 +87,13 @@ type bytesDescriptors struct {
 	containsDesc protoreflect.FieldDescriptor
 	inDesc       protoreflect.FieldDescriptor
 	notInDesc    protoreflect.FieldDescriptor
+	ipDesc       protoreflect.FieldDescriptor
+	ipv4Desc     protoreflect.FieldDescriptor
+	ipv6Desc     protoreflect.FieldDescriptor
+	uuidDesc     protoreflect.FieldDescriptor
 }
 
+//nolint:dupl
 func makeBytesDescriptors() bytesDescriptors {
 	rulesDesc := (*validate.BytesRules)(nil).ProtoReflect().Descriptor()
 	return bytesDescriptors{
@@ -56,6 +108,10 @@ func makeBytesDescriptors() bytesDescriptors {
 		containsDesc: rulesDesc.Fields().ByName("contains"),
 		inDesc:       rulesDesc.Fields().ByName("in"),
 		notInDesc:    rulesDesc.Fields().ByName("not_in"),
+		ipDesc:       rulesDesc.Fields().ByName("ip"),
+		ipv4Desc:     rulesDesc.Fields().ByName("ipv4"),
+		ipv6Desc:     rulesDesc.Fields().ByName("ipv6"),
+		uuidDesc:     rulesDesc.Fields().ByName("uuid"),
 	}
 }
 
@@ -80,6 +136,7 @@ type nativeBytesEval struct {
 	hasContains bool
 	inVals      [][]byte
 	notInVals   [][]byte
+	wellKnown   *bytesWellKnown
 }
 
 var (
@@ -164,7 +221,31 @@ func (n nativeBytesEval) Evaluate(_ protoreflect.Message, val protoreflect.Value
 			val, protoreflect.ValueOfBytes(bytesVal))
 	}
 
+	// well-known format constraints (ip, ipv4, ipv6, uuid)
+	if n.wellKnown != nil {
+		return n.evaluateWellKnown(bytesVal, val)
+	}
+
 	return nil
+}
+
+func (n nativeBytesEval) evaluateWellKnown(bytesVal []byte, val protoreflect.Value) error {
+	size := len(bytesVal)
+	wellKnown := n.wellKnown
+
+	if size == 0 {
+		return n.newViolation(bytesDescs.ruleDesc, wellKnown.desc,
+			wellKnown.emptyRuleID, wellKnown.emptyMsg,
+			val, protoreflect.ValueOfBool(true))
+	}
+
+	if slices.Contains(wellKnown.validSizes, size) {
+		return nil
+	}
+
+	return n.newViolation(bytesDescs.ruleDesc, wellKnown.desc,
+		wellKnown.ruleID, wellKnown.mainMsg,
+		val, protoreflect.ValueOfBool(true))
 }
 
 func (n nativeBytesEval) Tautology() bool {
@@ -182,11 +263,26 @@ func tryBuildNativeBytesRules(base base, rules *validate.BytesRules) evaluator {
 	if len(rules.ProtoReflect().GetUnknown()) > 0 {
 		return nil
 	}
-	if rules.HasWellKnown() {
-		return nil
-	}
 
 	hasRule := false
+
+	// Detect well-known format constraint (ip, ipv4, ipv6, uuid).
+	// Check both presence and value — setting ip=false means no check.
+	var wellKnown *bytesWellKnown
+	switch {
+	case rules.GetIp():
+		wellKnown = &bytesWellKnownIP
+		hasRule = true
+	case rules.GetIpv4():
+		wellKnown = &bytesWellKnownIPv4
+		hasRule = true
+	case rules.GetIpv6():
+		wellKnown = &bytesWellKnownIPv6
+		hasRule = true
+	case rules.GetUuid():
+		wellKnown = &bytesWellKnownUUID
+		hasRule = true
+	}
 
 	var constVal []byte
 	var hasConst bool
@@ -281,6 +377,7 @@ func tryBuildNativeBytesRules(base base, rules *validate.BytesRules) evaluator {
 		hasContains: hasContains,
 		inVals:      inVals,
 		notInVals:   notInVals,
+		wellKnown:   wellKnown,
 	}
 }
 

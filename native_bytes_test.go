@@ -170,6 +170,71 @@ func TestNativeBytesNotIn(t *testing.T) {
 	require.Error(t, eval.Evaluate(nil, protoreflect.ValueOfBytes([]byte{0x00}), &validationConfig{}))
 }
 
+func TestNativeBytesIP(t *testing.T) {
+	t.Parallel()
+	eval := buildNativeBytes(t, validate.BytesRules_builder{Ip: proto.Bool(true)}.Build())
+	require.NotNil(t, eval)
+
+	// valid IPv4 (4 bytes)
+	require.NoError(t, eval.Evaluate(nil, protoreflect.ValueOfBytes([]byte{127, 0, 0, 1}), &validationConfig{}))
+	// valid IPv6 (16 bytes)
+	require.NoError(t, eval.Evaluate(nil, protoreflect.ValueOfBytes(make([]byte, 16)), &validationConfig{}))
+
+	// empty → empty-specific message
+	err := eval.Evaluate(nil, protoreflect.ValueOfBytes([]byte{}), &validationConfig{})
+	require.Error(t, err)
+	var valErr *ValidationError
+	require.ErrorAs(t, err, &valErr)
+	assert.Equal(t, "bytes.ip_empty", valErr.Violations[0].Proto.GetRuleId())
+	assert.Equal(t, "value is empty, which is not a valid IP address", valErr.Violations[0].Proto.GetMessage())
+
+	// wrong length → main message
+	err = eval.Evaluate(nil, protoreflect.ValueOfBytes([]byte{1, 2, 3}), &validationConfig{})
+	require.Error(t, err)
+	require.ErrorAs(t, err, &valErr)
+	assert.Equal(t, "bytes.ip", valErr.Violations[0].Proto.GetRuleId())
+	assert.Equal(t, "value must be a valid IP address", valErr.Violations[0].Proto.GetMessage())
+}
+
+func TestNativeBytesIPv4(t *testing.T) {
+	t.Parallel()
+	eval := buildNativeBytes(t, validate.BytesRules_builder{Ipv4: proto.Bool(true)}.Build())
+	require.NotNil(t, eval)
+
+	require.NoError(t, eval.Evaluate(nil, protoreflect.ValueOfBytes([]byte{10, 0, 0, 1}), &validationConfig{}))
+	require.Error(t, eval.Evaluate(nil, protoreflect.ValueOfBytes([]byte{}), &validationConfig{}))
+	require.Error(t, eval.Evaluate(nil, protoreflect.ValueOfBytes(make([]byte, 16)), &validationConfig{}))
+}
+
+func TestNativeBytesIPv6(t *testing.T) {
+	t.Parallel()
+	eval := buildNativeBytes(t, validate.BytesRules_builder{Ipv6: proto.Bool(true)}.Build())
+	require.NotNil(t, eval)
+
+	require.NoError(t, eval.Evaluate(nil, protoreflect.ValueOfBytes(make([]byte, 16)), &validationConfig{}))
+	require.Error(t, eval.Evaluate(nil, protoreflect.ValueOfBytes([]byte{}), &validationConfig{}))
+	require.Error(t, eval.Evaluate(nil, protoreflect.ValueOfBytes([]byte{1, 2, 3, 4}), &validationConfig{}))
+}
+
+func TestNativeBytesUUID(t *testing.T) {
+	t.Parallel()
+	eval := buildNativeBytes(t, validate.BytesRules_builder{Uuid: proto.Bool(true)}.Build())
+	require.NotNil(t, eval)
+
+	require.NoError(t, eval.Evaluate(nil, protoreflect.ValueOfBytes(make([]byte, 16)), &validationConfig{}))
+
+	err := eval.Evaluate(nil, protoreflect.ValueOfBytes([]byte{}), &validationConfig{})
+	require.Error(t, err)
+	var valErr *ValidationError
+	require.ErrorAs(t, err, &valErr)
+	assert.Equal(t, "bytes.uuid_empty", valErr.Violations[0].Proto.GetRuleId())
+
+	err = eval.Evaluate(nil, protoreflect.ValueOfBytes([]byte{1, 2, 3}), &validationConfig{})
+	require.Error(t, err)
+	require.ErrorAs(t, err, &valErr)
+	assert.Equal(t, "bytes.uuid", valErr.Violations[0].Proto.GetRuleId())
+}
+
 func TestTryBuildNativeBytesRules_ReturnsNil(t *testing.T) {
 	t.Parallel()
 
@@ -179,9 +244,6 @@ func TestTryBuildNativeBytesRules_ReturnsNil(t *testing.T) {
 	}{
 		{"nil_rules", nil},
 		{"empty_rules", validate.BytesRules_builder{}.Build()},
-		{"ip_well_known", validate.BytesRules_builder{Ip: proto.Bool(true)}.Build()},
-		{"ipv4_well_known", validate.BytesRules_builder{Ipv4: proto.Bool(true)}.Build()},
-		{"ipv6_well_known", validate.BytesRules_builder{Ipv6: proto.Bool(true)}.Build()},
 	}
 
 	for _, tt := range tests {

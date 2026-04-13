@@ -229,17 +229,252 @@ func TestTryBuildNativeStringRules_ReturnsNil(t *testing.T) {
 	}{
 		{"nil_rules", nil},
 		{"empty_rules", validate.StringRules_builder{}.Build()},
-		{"email", validate.StringRules_builder{Email: proto.Bool(true)}.Build()},
-		{"hostname", validate.StringRules_builder{Hostname: proto.Bool(true)}.Build()},
-		{"uuid", validate.StringRules_builder{Uuid: proto.Bool(true)}.Build()},
-		{"ip", validate.StringRules_builder{Ip: proto.Bool(true)}.Build()},
-		{"uri", validate.StringRules_builder{Uri: proto.Bool(true)}.Build()},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			assert.Nil(t, tryBuildNativeStringRules(base{}, tt.rules))
+		})
+	}
+}
+
+func TestNativeStringWellKnowns(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		rules       *validate.StringRules
+		valid       string
+		invalid     string
+		ruleID      string
+		message     string
+		emptyRuleID string
+		emptyMsg    string
+	}{
+		{
+			name:        "email",
+			rules:       validate.StringRules_builder{Email: proto.Bool(true)}.Build(),
+			valid:       "user@example.com",
+			invalid:     "not-an-email",
+			ruleID:      "string.email",
+			message:     "value must be a valid email address",
+			emptyRuleID: "string.email_empty",
+			emptyMsg:    "value is empty, which is not a valid email address",
+		},
+		{
+			name:        "hostname",
+			rules:       validate.StringRules_builder{Hostname: proto.Bool(true)}.Build(),
+			valid:       "example.com",
+			invalid:     "-invalid",
+			ruleID:      "string.hostname",
+			message:     "value must be a valid hostname",
+			emptyRuleID: "string.hostname_empty",
+			emptyMsg:    "value is empty, which is not a valid hostname",
+		},
+		{
+			name:        "ip",
+			rules:       validate.StringRules_builder{Ip: proto.Bool(true)}.Build(),
+			valid:       "192.168.1.1",
+			invalid:     "not-valid",
+			ruleID:      "string.ip",
+			message:     "value must be a valid IP address",
+			emptyRuleID: "string.ip_empty",
+			emptyMsg:    "value is empty, which is not a valid IP address",
+		},
+		{
+			name:        "ipv4",
+			rules:       validate.StringRules_builder{Ipv4: proto.Bool(true)}.Build(),
+			valid:       "192.168.1.1",
+			invalid:     "::1",
+			ruleID:      "string.ipv4",
+			message:     "value must be a valid IPv4 address",
+			emptyRuleID: "string.ipv4_empty",
+			emptyMsg:    "value is empty, which is not a valid IPv4 address",
+		},
+		{
+			name:        "ipv6",
+			rules:       validate.StringRules_builder{Ipv6: proto.Bool(true)}.Build(),
+			valid:       "::1",
+			invalid:     "192.168.1.1",
+			ruleID:      "string.ipv6",
+			message:     "value must be a valid IPv6 address",
+			emptyRuleID: "string.ipv6_empty",
+			emptyMsg:    "value is empty, which is not a valid IPv6 address",
+		},
+		{
+			name:        "uri",
+			rules:       validate.StringRules_builder{Uri: proto.Bool(true)}.Build(),
+			valid:       "https://example.com",
+			invalid:     "not a uri",
+			ruleID:      "string.uri",
+			message:     "value must be a valid URI",
+			emptyRuleID: "string.uri_empty",
+			emptyMsg:    "value is empty, which is not a valid URI",
+		},
+		{
+			name:    "uri_ref",
+			rules:   validate.StringRules_builder{UriRef: proto.Bool(true)}.Build(),
+			valid:   "/path/to/resource",
+			invalid: "not valid ref",
+			ruleID:  "string.uri_ref",
+			message: "value must be a valid URI Reference",
+		},
+		{
+			name:        "address",
+			rules:       validate.StringRules_builder{Address: proto.Bool(true)}.Build(),
+			valid:       "example.com",
+			invalid:     "!@#$%",
+			ruleID:      "string.address",
+			message:     "value must be a valid hostname, or ip address",
+			emptyRuleID: "string.address_empty",
+			emptyMsg:    "value is empty, which is not a valid hostname, or ip address",
+		},
+		{
+			name:        "uuid",
+			rules:       validate.StringRules_builder{Uuid: proto.Bool(true)}.Build(),
+			valid:       "550e8400-e29b-41d4-a716-446655440000",
+			invalid:     "not-a-uuid",
+			ruleID:      "string.uuid",
+			message:     "value must be a valid UUID",
+			emptyRuleID: "string.uuid_empty",
+			emptyMsg:    "value is empty, which is not a valid UUID",
+		},
+		{
+			name:        "tuuid",
+			rules:       validate.StringRules_builder{Tuuid: proto.Bool(true)}.Build(),
+			valid:       "550e8400e29b41d4a716446655440000",
+			invalid:     "not-a-tuuid",
+			ruleID:      "string.tuuid",
+			message:     "value must be a valid trimmed UUID",
+			emptyRuleID: "string.tuuid_empty",
+			emptyMsg:    "value is empty, which is not a valid trimmed UUID",
+		},
+		{
+			name:        "ip_with_prefixlen",
+			rules:       validate.StringRules_builder{IpWithPrefixlen: proto.Bool(true)}.Build(),
+			valid:       "192.168.0.1/24",
+			invalid:     "not-valid",
+			ruleID:      "string.ip_with_prefixlen",
+			message:     "value must be a valid IP prefix",
+			emptyRuleID: "string.ip_with_prefixlen_empty",
+			emptyMsg:    "value is empty, which is not a valid IP prefix",
+		},
+		{
+			name:        "ipv4_with_prefixlen",
+			rules:       validate.StringRules_builder{Ipv4WithPrefixlen: proto.Bool(true)}.Build(),
+			valid:       "192.168.0.1/24",
+			invalid:     "not-valid",
+			ruleID:      "string.ipv4_with_prefixlen",
+			message:     "value must be a valid IPv4 address with prefix length",
+			emptyRuleID: "string.ipv4_with_prefixlen_empty",
+			emptyMsg:    "value is empty, which is not a valid IPv4 address with prefix length",
+		},
+		{
+			name:        "ipv6_with_prefixlen",
+			rules:       validate.StringRules_builder{Ipv6WithPrefixlen: proto.Bool(true)}.Build(),
+			valid:       "::1/128",
+			invalid:     "not-valid",
+			ruleID:      "string.ipv6_with_prefixlen",
+			message:     "value must be a valid IPv6 address with prefix length",
+			emptyRuleID: "string.ipv6_with_prefixlen_empty",
+			emptyMsg:    "value is empty, which is not a valid IPv6 address with prefix length",
+		},
+		{
+			name:        "ip_prefix",
+			rules:       validate.StringRules_builder{IpPrefix: proto.Bool(true)}.Build(),
+			valid:       "192.168.0.0/24",
+			invalid:     "not-valid",
+			ruleID:      "string.ip_prefix",
+			message:     "value must be a valid IP prefix",
+			emptyRuleID: "string.ip_prefix_empty",
+			emptyMsg:    "value is empty, which is not a valid IP prefix",
+		},
+		{
+			name:        "ipv4_prefix",
+			rules:       validate.StringRules_builder{Ipv4Prefix: proto.Bool(true)}.Build(),
+			valid:       "192.168.0.0/24",
+			invalid:     "not-valid",
+			ruleID:      "string.ipv4_prefix",
+			message:     "value must be a valid IPv4 prefix",
+			emptyRuleID: "string.ipv4_prefix_empty",
+			emptyMsg:    "value is empty, which is not a valid IPv4 prefix",
+		},
+		{
+			name:        "ipv6_prefix",
+			rules:       validate.StringRules_builder{Ipv6Prefix: proto.Bool(true)}.Build(),
+			valid:       "2001:db8::/32",
+			invalid:     "not-valid",
+			ruleID:      "string.ipv6_prefix",
+			message:     "value must be a valid IPv6 prefix",
+			emptyRuleID: "string.ipv6_prefix_empty",
+			emptyMsg:    "value is empty, which is not a valid IPv6 prefix",
+		},
+		{
+			name:        "host_and_port",
+			rules:       validate.StringRules_builder{HostAndPort: proto.Bool(true)}.Build(),
+			valid:       "example.com:80",
+			invalid:     "example.com",
+			ruleID:      "string.host_and_port",
+			message:     "value must be a valid host (hostname or IP address) and port pair",
+			emptyRuleID: "string.host_and_port_empty",
+			emptyMsg:    "value is empty, which is not a valid host and port pair",
+		},
+		{
+			name:        "ulid",
+			rules:       validate.StringRules_builder{Ulid: proto.Bool(true)}.Build(),
+			valid:       "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+			invalid:     "not-a-ulid",
+			ruleID:      "string.ulid",
+			message:     "value must be a valid ULID",
+			emptyRuleID: "string.ulid_empty",
+			emptyMsg:    "value is empty, which is not a valid ULID",
+		},
+		{
+			name:        "well_known_regex_header_name",
+			rules:       validate.StringRules_builder{WellKnownRegex: validate.KnownRegex_KNOWN_REGEX_HTTP_HEADER_NAME.Enum()}.Build(),
+			valid:       "Content-Type",
+			invalid:     "invalid header",
+			ruleID:      "string.well_known_regex.header_name",
+			message:     "value must be a valid HTTP header name",
+			emptyRuleID: "string.well_known_regex.header_name_empty",
+			emptyMsg:    "value is empty, which is not a valid HTTP header name",
+		},
+		{
+			name:    "well_known_regex_header_value",
+			rules:   validate.StringRules_builder{WellKnownRegex: validate.KnownRegex_KNOWN_REGEX_HTTP_HEADER_VALUE.Enum()}.Build(),
+			valid:   "application/json",
+			invalid: "\x00",
+			ruleID:  "string.well_known_regex.header_value",
+			message: "value must be a valid HTTP header value",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			eval := buildNativeString(t, tt.rules)
+			require.NotNil(t, eval)
+
+			require.NoError(t, eval.Evaluate(nil, protoreflect.ValueOfString(tt.valid), &validationConfig{}))
+
+			err := eval.Evaluate(nil, protoreflect.ValueOfString(tt.invalid), &validationConfig{})
+			require.Error(t, err)
+			var valErr *ValidationError
+			require.ErrorAs(t, err, &valErr)
+			require.Len(t, valErr.Violations, 1)
+			assert.Equal(t, tt.ruleID, valErr.Violations[0].Proto.GetRuleId())
+			assert.Equal(t, tt.message, valErr.Violations[0].Proto.GetMessage())
+
+			if tt.emptyRuleID != "" {
+				err = eval.Evaluate(nil, protoreflect.ValueOfString(""), &validationConfig{})
+				require.Error(t, err)
+				var emptyValErr *ValidationError
+				require.ErrorAs(t, err, &emptyValErr)
+				require.Len(t, emptyValErr.Violations, 1)
+				assert.Equal(t, tt.emptyRuleID, emptyValErr.Violations[0].Proto.GetRuleId())
+				assert.Equal(t, tt.emptyMsg, emptyValErr.Violations[0].Proto.GetMessage())
+			}
 		})
 	}
 }

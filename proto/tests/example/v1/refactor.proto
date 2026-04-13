@@ -157,3 +157,14 @@ message TestByteMatching {
     (gofakeit.generate).tag = "1234567890123456"
   ];
 }
+
+message StringMatching {
+  string hostname = 1 [
+    (buf.validate.field).string.hostname = true,
+    (gofakeit.generate).tag = "{domainname}"
+  ];
+  string host_and_port = 2 [
+    (buf.validate.field).string.host_and_port = true,
+    (gofakeit.generate).tag = "{domainname}:8080"
+  ];
+}

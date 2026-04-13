@@ -93,7 +93,6 @@ type bytesDescriptors struct {
 	uuidDesc     protoreflect.FieldDescriptor
 }
 
-//nolint:dupl
 func makeBytesDescriptors() bytesDescriptors {
 	rulesDesc := (*validate.BytesRules)(nil).ProtoReflect().Descriptor()
 	return bytesDescriptors{

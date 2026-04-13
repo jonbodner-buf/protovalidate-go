@@ -597,6 +597,77 @@ func (b0 TestByteMatching_builder) Build() *TestByteMatching {
 	return m0
 }
 
+type StringMatching struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Hostname    string                 `protobuf:"bytes,1,opt,name=hostname,proto3"`
+	xxx_hidden_HostAndPort string                 `protobuf:"bytes,2,opt,name=host_and_port,json=hostAndPort,proto3"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *StringMatching) Reset() {
+	*x = StringMatching{}
+	mi := &file_tests_example_v1_refactor_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StringMatching) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StringMatching) ProtoMessage() {}
+
+func (x *StringMatching) ProtoReflect() protoreflect.Message {
+	mi := &file_tests_example_v1_refactor_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *StringMatching) GetHostname() string {
+	if x != nil {
+		return x.xxx_hidden_Hostname
+	}
+	return ""
+}
+
+func (x *StringMatching) GetHostAndPort() string {
+	if x != nil {
+		return x.xxx_hidden_HostAndPort
+	}
+	return ""
+}
+
+func (x *StringMatching) SetHostname(v string) {
+	x.xxx_hidden_Hostname = v
+}
+
+func (x *StringMatching) SetHostAndPort(v string) {
+	x.xxx_hidden_HostAndPort = v
+}
+
+type StringMatching_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Hostname    string
+	HostAndPort string
+}
+
+func (b0 StringMatching_builder) Build() *StringMatching {
+	m0 := &StringMatching{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Hostname = b.Hostname
+	x.xxx_hidden_HostAndPort = b.HostAndPort
+	return m0
+}
+
 var File_tests_example_v1_refactor_proto protoreflect.FileDescriptor
 
 const file_tests_example_v1_refactor_proto_rawDesc = "" +
@@ -632,7 +703,10 @@ const file_tests_example_v1_refactor_proto_rawDesc = "" +
 	"\aip_addr\x18\x01 \x01(\fB\x1d\xbaH\x04z\x02P\x01\xca\xe66\x12\x12\x101234567890123456R\x06ipAddr\x12.\n" +
 	"\tipv4_addr\x18\x02 \x01(\fB\x11\xbaH\x04z\x02X\x01\xca\xe66\x06\x12\x041234R\bipv4Addr\x12:\n" +
 	"\tipv6_addr\x18\x03 \x01(\fB\x1d\xbaH\x04z\x02`\x01\xca\xe66\x12\x12\x101234567890123456R\bipv6Addr\x121\n" +
-	"\x04uuid\x18\x04 \x01(\fB\x1d\xbaH\x04z\x02x\x01\xca\xe66\x12\x12\x101234567890123456R\x04uuid*a\n" +
+	"\x04uuid\x18\x04 \x01(\fB\x1d\xbaH\x04z\x02x\x01\xca\xe66\x12\x12\x101234567890123456R\x04uuid\"\x8c\x01\n" +
+	"\x0eStringMatching\x125\n" +
+	"\bhostname\x18\x01 \x01(\tB\x19\xbaH\x04r\x02h\x01\xca\xe66\x0e\x12\f{domainname}R\bhostname\x12C\n" +
+	"\rhost_and_port\x18\x02 \x01(\tB\x1f\xbaH\x05r\x03\x80\x02\x01\xca\xe66\x13\x12\x11{domainname}:8080R\vhostAndPort*a\n" +
 	"\bTestEnum\x12\x19\n" +
 	"\x15TEST_ENUM_UNSPECIFIED\x10\x00\x12\x12\n" +
 	"\x0eTEST_ENUM_VAL1\x10\x01\x12\x12\n" +
@@ -641,13 +715,14 @@ const file_tests_example_v1_refactor_proto_rawDesc = "" +
 	"\x14com.tests.example.v1B\rRefactorProtoP\x01ZBbuf.build/go/protovalidate/internal/gen/tests/example/v1;examplev1\xa2\x02\x03TEX\xaa\x02\x10Tests.Example.V1\xca\x02\x10Tests\\Example\\V1\xe2\x02\x1cTests\\Example\\V1\\GPBMetadata\xea\x02\x12Tests::Example::V1b\x06proto3"
 
 var file_tests_example_v1_refactor_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_tests_example_v1_refactor_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_tests_example_v1_refactor_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_tests_example_v1_refactor_proto_goTypes = []any{
 	(TestEnum)(0),            // 0: tests.example.v1.TestEnum
 	(*BenchGT)(nil),          // 1: tests.example.v1.BenchGT
 	(*BenchTestBytes)(nil),   // 2: tests.example.v1.BenchTestBytes
 	(*TestUnique)(nil),       // 3: tests.example.v1.TestUnique
 	(*TestByteMatching)(nil), // 4: tests.example.v1.TestByteMatching
+	(*StringMatching)(nil),   // 5: tests.example.v1.StringMatching
 }
 var file_tests_example_v1_refactor_proto_depIdxs = []int32{
 	0, // 0: tests.example.v1.TestUnique.enums:type_name -> tests.example.v1.TestEnum
@@ -669,7 +744,7 @@ func file_tests_example_v1_refactor_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tests_example_v1_refactor_proto_rawDesc), len(file_tests_example_v1_refactor_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

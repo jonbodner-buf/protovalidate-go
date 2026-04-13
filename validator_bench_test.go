@@ -86,6 +86,11 @@ func TestByteMatching(t *testing.T) {
 	testSuccess(t, &pb.TestByteMatching{})
 }
 
+func TestStringMatching(t *testing.T) {
+	t.Parallel()
+	testSuccess(t, &pb.StringMatching{})
+}
+
 func TestRepeated(t *testing.T) {
 	t.Parallel()
 	t.Run("Scalar", func(t *testing.T) {

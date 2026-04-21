@@ -49,7 +49,7 @@ func TestNativeStringConst(t *testing.T) {
 	require.ErrorAs(t, err, &valErr)
 	require.Len(t, valErr.Violations, 1)
 	assert.Equal(t, "string.const", valErr.Violations[0].Proto.GetRuleId())
-	assert.Equal(t, "value must equal `hello`", valErr.Violations[0].Proto.GetMessage())
+	assert.Equal(t, "must equal `hello`", valErr.Violations[0].Proto.GetMessage())
 }
 
 func TestNativeStringLen(t *testing.T) {
@@ -135,7 +135,7 @@ func TestNativeStringPattern(t *testing.T) {
 	var valErr *ValidationError
 	require.ErrorAs(t, err, &valErr)
 	assert.Equal(t, "string.pattern", valErr.Violations[0].Proto.GetRuleId())
-	assert.Equal(t, "value does not match regex pattern `^[a-z]+$`", valErr.Violations[0].Proto.GetMessage())
+	assert.Equal(t, "does not match regex pattern `^[a-z]+$`", valErr.Violations[0].Proto.GetMessage())
 }
 
 func TestNativeStringPattern_InvalidRegex(t *testing.T) {
@@ -258,7 +258,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "user@example.com",
 			invalid:     "not-an-email",
 			ruleID:      "string.email",
-			message:     "value must be a valid email address",
+			message:     "must be a valid email address",
 			emptyRuleID: "string.email_empty",
 			emptyMsg:    "value is empty, which is not a valid email address",
 		},
@@ -268,7 +268,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "example.com",
 			invalid:     "-invalid",
 			ruleID:      "string.hostname",
-			message:     "value must be a valid hostname",
+			message:     "must be a valid hostname",
 			emptyRuleID: "string.hostname_empty",
 			emptyMsg:    "value is empty, which is not a valid hostname",
 		},
@@ -278,7 +278,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "192.168.1.1",
 			invalid:     "not-valid",
 			ruleID:      "string.ip",
-			message:     "value must be a valid IP address",
+			message:     "must be a valid IP address",
 			emptyRuleID: "string.ip_empty",
 			emptyMsg:    "value is empty, which is not a valid IP address",
 		},
@@ -288,7 +288,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "192.168.1.1",
 			invalid:     "::1",
 			ruleID:      "string.ipv4",
-			message:     "value must be a valid IPv4 address",
+			message:     "must be a valid IPv4 address",
 			emptyRuleID: "string.ipv4_empty",
 			emptyMsg:    "value is empty, which is not a valid IPv4 address",
 		},
@@ -298,7 +298,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "::1",
 			invalid:     "192.168.1.1",
 			ruleID:      "string.ipv6",
-			message:     "value must be a valid IPv6 address",
+			message:     "must be a valid IPv6 address",
 			emptyRuleID: "string.ipv6_empty",
 			emptyMsg:    "value is empty, which is not a valid IPv6 address",
 		},
@@ -308,7 +308,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "https://example.com",
 			invalid:     "not a uri",
 			ruleID:      "string.uri",
-			message:     "value must be a valid URI",
+			message:     "must be a valid URI",
 			emptyRuleID: "string.uri_empty",
 			emptyMsg:    "value is empty, which is not a valid URI",
 		},
@@ -318,7 +318,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:   "/path/to/resource",
 			invalid: "not valid ref",
 			ruleID:  "string.uri_ref",
-			message: "value must be a valid URI Reference",
+			message: "must be a valid URI Reference",
 		},
 		{
 			name:        "address",
@@ -326,7 +326,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "example.com",
 			invalid:     "!@#$%",
 			ruleID:      "string.address",
-			message:     "value must be a valid hostname, or ip address",
+			message:     "must be a valid hostname, or ip address",
 			emptyRuleID: "string.address_empty",
 			emptyMsg:    "value is empty, which is not a valid hostname, or ip address",
 		},
@@ -336,7 +336,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "550e8400-e29b-41d4-a716-446655440000",
 			invalid:     "not-a-uuid",
 			ruleID:      "string.uuid",
-			message:     "value must be a valid UUID",
+			message:     "must be a valid UUID",
 			emptyRuleID: "string.uuid_empty",
 			emptyMsg:    "value is empty, which is not a valid UUID",
 		},
@@ -346,7 +346,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "550e8400e29b41d4a716446655440000",
 			invalid:     "not-a-tuuid",
 			ruleID:      "string.tuuid",
-			message:     "value must be a valid trimmed UUID",
+			message:     "must be a valid trimmed UUID",
 			emptyRuleID: "string.tuuid_empty",
 			emptyMsg:    "value is empty, which is not a valid trimmed UUID",
 		},
@@ -356,7 +356,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "192.168.0.1/24",
 			invalid:     "not-valid",
 			ruleID:      "string.ip_with_prefixlen",
-			message:     "value must be a valid IP prefix",
+			message:     "must be a valid IP prefix",
 			emptyRuleID: "string.ip_with_prefixlen_empty",
 			emptyMsg:    "value is empty, which is not a valid IP prefix",
 		},
@@ -366,7 +366,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "192.168.0.1/24",
 			invalid:     "not-valid",
 			ruleID:      "string.ipv4_with_prefixlen",
-			message:     "value must be a valid IPv4 address with prefix length",
+			message:     "must be a valid IPv4 address with prefix length",
 			emptyRuleID: "string.ipv4_with_prefixlen_empty",
 			emptyMsg:    "value is empty, which is not a valid IPv4 address with prefix length",
 		},
@@ -376,7 +376,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "::1/128",
 			invalid:     "not-valid",
 			ruleID:      "string.ipv6_with_prefixlen",
-			message:     "value must be a valid IPv6 address with prefix length",
+			message:     "must be a valid IPv6 address with prefix length",
 			emptyRuleID: "string.ipv6_with_prefixlen_empty",
 			emptyMsg:    "value is empty, which is not a valid IPv6 address with prefix length",
 		},
@@ -386,7 +386,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "192.168.0.0/24",
 			invalid:     "not-valid",
 			ruleID:      "string.ip_prefix",
-			message:     "value must be a valid IP prefix",
+			message:     "must be a valid IP prefix",
 			emptyRuleID: "string.ip_prefix_empty",
 			emptyMsg:    "value is empty, which is not a valid IP prefix",
 		},
@@ -396,7 +396,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "192.168.0.0/24",
 			invalid:     "not-valid",
 			ruleID:      "string.ipv4_prefix",
-			message:     "value must be a valid IPv4 prefix",
+			message:     "must be a valid IPv4 prefix",
 			emptyRuleID: "string.ipv4_prefix_empty",
 			emptyMsg:    "value is empty, which is not a valid IPv4 prefix",
 		},
@@ -406,7 +406,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "2001:db8::/32",
 			invalid:     "not-valid",
 			ruleID:      "string.ipv6_prefix",
-			message:     "value must be a valid IPv6 prefix",
+			message:     "must be a valid IPv6 prefix",
 			emptyRuleID: "string.ipv6_prefix_empty",
 			emptyMsg:    "value is empty, which is not a valid IPv6 prefix",
 		},
@@ -416,7 +416,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "example.com:80",
 			invalid:     "example.com",
 			ruleID:      "string.host_and_port",
-			message:     "value must be a valid host (hostname or IP address) and port pair",
+			message:     "must be a valid host (hostname or IP address) and port pair",
 			emptyRuleID: "string.host_and_port_empty",
 			emptyMsg:    "value is empty, which is not a valid host and port pair",
 		},
@@ -426,7 +426,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "01ARZ3NDEKTSV4RRFFQ69G5FAV",
 			invalid:     "not-a-ulid",
 			ruleID:      "string.ulid",
-			message:     "value must be a valid ULID",
+			message:     "must be a valid ULID",
 			emptyRuleID: "string.ulid_empty",
 			emptyMsg:    "value is empty, which is not a valid ULID",
 		},
@@ -436,7 +436,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:       "Content-Type",
 			invalid:     "invalid header",
 			ruleID:      "string.well_known_regex.header_name",
-			message:     "value must be a valid HTTP header name",
+			message:     "must be a valid HTTP header name",
 			emptyRuleID: "string.well_known_regex.header_name_empty",
 			emptyMsg:    "value is empty, which is not a valid HTTP header name",
 		},
@@ -446,7 +446,7 @@ func TestNativeStringWellKnowns(t *testing.T) {
 			valid:   "application/json",
 			invalid: "\x00",
 			ruleID:  "string.well_known_regex.header_value",
-			message: "value must be a valid HTTP header value",
+			message: "must be a valid HTTP header value",
 		},
 	}
 

@@ -45,8 +45,8 @@ func TestNativeBytes(t *testing.T) {
 	} else {
 		x := err.Error()
 		if diff := cmp.Diff(x, `validation errors:
- - b1: value must not be in list [23, 45, 67]
- - b: value must be in list [23, 45, 67]`); diff != "" {
+ - b1: must not be in list [23, 45, 67]
+ - b: must be in list [23, 45, 67]`); diff != "" {
 			t.Error("native off, difference in error: " + diff)
 		}
 	}
@@ -63,8 +63,8 @@ func TestNativeBytes(t *testing.T) {
 	} else {
 		x := err.Error()
 		if diff := cmp.Diff(x, `validation errors:
- - b1: value must not be in list [23, 45, 67]
- - b: value must be in list [23, 45, 67]`); diff != "" {
+ - b1: must not be in list [23, 45, 67]
+ - b: must be in list [23, 45, 67]`); diff != "" {
 			t.Error("native on, difference in error: " + diff)
 		}
 	}
@@ -82,7 +82,7 @@ func TestNativeBytesConst(t *testing.T) {
 	require.ErrorAs(t, err, &valErr)
 	require.Len(t, valErr.Violations, 1)
 	assert.Equal(t, "bytes.const", valErr.Violations[0].Proto.GetRuleId())
-	assert.Equal(t, "value must be 0102", valErr.Violations[0].Proto.GetMessage())
+	assert.Equal(t, "must be 0102", valErr.Violations[0].Proto.GetMessage())
 }
 
 func TestNativeBytesLen(t *testing.T) {
@@ -193,7 +193,7 @@ func TestNativeBytesIP(t *testing.T) {
 	require.Error(t, err)
 	require.ErrorAs(t, err, &valErr)
 	assert.Equal(t, "bytes.ip", valErr.Violations[0].Proto.GetRuleId())
-	assert.Equal(t, "value must be a valid IP address", valErr.Violations[0].Proto.GetMessage())
+	assert.Equal(t, "must be a valid IP address", valErr.Violations[0].Proto.GetMessage())
 }
 
 func TestNativeBytesIPv4(t *testing.T) {
@@ -282,7 +282,7 @@ func TestNativeBytes_EndToEnd(t *testing.T) {
 	require.ErrorAs(t, err, &valErr)
 	require.Len(t, valErr.Violations, 1)
 	assert.Equal(t, "bytes.min_len", valErr.Violations[0].Proto.GetRuleId())
-	assert.Equal(t, "value length must be at least 2 bytes", valErr.Violations[0].Proto.GetMessage())
+	assert.Equal(t, "must be at least 2 bytes", valErr.Violations[0].Proto.GetMessage())
 }
 
 func buildNativeBytes(t testing.TB, rules *validate.BytesRules) evaluator {

@@ -46,7 +46,7 @@ func (n nativeRepeatedEval) Evaluate(_ protoreflect.Message, val protoreflect.Va
 	if n.minItems != nil && size < *n.minItems {
 		return n.newViolation(repeatedFieldRulesDesc, repeatedMinItemsDesc,
 			"repeated.min_items",
-			fmt.Sprintf("value must contain at least %d item(s)", *n.minItems),
+			fmt.Sprintf("must contain at least %d item(s)", *n.minItems),
 			val, protoreflect.ValueOfUint64(*n.minItems))
 	}
 
@@ -54,7 +54,7 @@ func (n nativeRepeatedEval) Evaluate(_ protoreflect.Message, val protoreflect.Va
 	if n.maxItems != nil && size > *n.maxItems {
 		return n.newViolation(repeatedFieldRulesDesc, repeatedMaxItemsDesc,
 			"repeated.max_items",
-			fmt.Sprintf("value must contain no more than %d item(s)", *n.maxItems),
+			fmt.Sprintf("must contain no more than %d item(s)", *n.maxItems),
 			val, protoreflect.ValueOfUint64(*n.maxItems))
 	}
 

@@ -41,7 +41,7 @@ var (
 		desc:        bytesDescs.ipDesc,
 		ruleID:      "bytes.ip",
 		emptyRuleID: "bytes.ip_empty",
-		mainMsg:     "value must be a valid IP address",
+		mainMsg:     "must be a valid IP address",
 		emptyMsg:    "value is empty, which is not a valid IP address",
 		validSizes:  []int{4, 16},
 	}
@@ -50,7 +50,7 @@ var (
 		desc:        bytesDescs.ipv4Desc,
 		ruleID:      "bytes.ipv4",
 		emptyRuleID: "bytes.ipv4_empty",
-		mainMsg:     "value must be a valid IPv4 address",
+		mainMsg:     "must be a valid IPv4 address",
 		emptyMsg:    "value is empty, which is not a valid IPv4 address",
 		validSizes:  []int{4},
 	}
@@ -59,7 +59,7 @@ var (
 		desc:        bytesDescs.ipv6Desc,
 		ruleID:      "bytes.ipv6",
 		emptyRuleID: "bytes.ipv6_empty",
-		mainMsg:     "value must be a valid IPv6 address",
+		mainMsg:     "must be a valid IPv6 address",
 		emptyMsg:    "value is empty, which is not a valid IPv6 address",
 		validSizes:  []int{16},
 	}
@@ -68,7 +68,7 @@ var (
 		desc:        bytesDescs.uuidDesc,
 		ruleID:      "bytes.uuid",
 		emptyRuleID: "bytes.uuid_empty",
-		mainMsg:     "value must be a valid UUID",
+		mainMsg:     "must be a valid UUID",
 		emptyMsg:    "value is empty, which is not a valid UUID",
 		validSizes:  []int{16},
 	}
@@ -139,7 +139,7 @@ type nativeBytesEval struct {
 }
 
 var (
-	errNotUTF8 = errors.New("value must be valid UTF-8 to apply regexp")
+	errNotUTF8 = errors.New("must be valid UTF-8 to apply regexp")
 )
 
 func (n nativeBytesEval) Evaluate(_ protoreflect.Message, val protoreflect.Value, _ *validationConfig) error {
@@ -148,28 +148,28 @@ func (n nativeBytesEval) Evaluate(_ protoreflect.Message, val protoreflect.Value
 	// const
 	if n.hasConst && !bytes.Equal(bytesVal, n.constVal) {
 		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.constDesc,
-			"bytes.const", fmt.Sprintf("value must be %x", n.constVal),
+			"bytes.const", fmt.Sprintf("must be %x", n.constVal),
 			val, protoreflect.ValueOfBytes(n.constVal))
 	}
 
 	// len
 	if n.exactLen != nil && byteLen != *n.exactLen {
 		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.lenDesc,
-			"bytes.len", fmt.Sprintf("value length must be %d bytes", *n.exactLen),
+			"bytes.len", fmt.Sprintf("must be %d bytes", *n.exactLen),
 			val, protoreflect.ValueOfUint64(*n.exactLen))
 	}
 
 	// min_len
 	if n.minLen != nil && byteLen < *n.minLen {
 		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.minLenDesc,
-			"bytes.min_len", fmt.Sprintf("value length must be at least %d bytes", *n.minLen),
+			"bytes.min_len", fmt.Sprintf("must be at least %d bytes", *n.minLen),
 			val, protoreflect.ValueOfUint64(*n.minLen))
 	}
 
 	// max_len
 	if n.maxLen != nil && byteLen > *n.maxLen {
 		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.maxLenDesc,
-			"bytes.max_len", fmt.Sprintf("value must be at most %d bytes", *n.maxLen),
+			"bytes.max_len", fmt.Sprintf("must be at most %d bytes", *n.maxLen),
 			val, protoreflect.ValueOfUint64(*n.maxLen))
 	}
 
@@ -180,7 +180,7 @@ func (n nativeBytesEval) Evaluate(_ protoreflect.Message, val protoreflect.Value
 		}
 		if !n.pattern.MatchString(string(bytesVal)) {
 			return n.newViolation(bytesDescs.ruleDesc, bytesDescs.patternDesc,
-				"bytes.pattern", fmt.Sprintf("value must match regex pattern `%s`", n.patternStr),
+				"bytes.pattern", fmt.Sprintf("must match regex pattern `%s`", n.patternStr),
 				val, protoreflect.ValueOfString(n.patternStr))
 		}
 	}
@@ -188,35 +188,35 @@ func (n nativeBytesEval) Evaluate(_ protoreflect.Message, val protoreflect.Value
 	// prefix
 	if n.hasPrefix && !bytes.HasPrefix(bytesVal, n.prefix) {
 		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.prefixDesc,
-			"bytes.prefix", fmt.Sprintf("value does not have prefix %x", n.prefix),
+			"bytes.prefix", fmt.Sprintf("does not have prefix %x", n.prefix),
 			val, protoreflect.ValueOfBytes(n.prefix))
 	}
 
 	// suffix
 	if n.hasSuffix && !bytes.HasSuffix(bytesVal, n.suffix) {
 		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.suffixDesc,
-			"bytes.suffix", fmt.Sprintf("value does not have suffix %x", n.suffix),
+			"bytes.suffix", fmt.Sprintf("does not have suffix %x", n.suffix),
 			val, protoreflect.ValueOfBytes(n.suffix))
 	}
 
 	// contains
 	if n.hasContains && !bytes.Contains(bytesVal, n.contains) {
 		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.containsDesc,
-			"bytes.contains", fmt.Sprintf("value does not contain %x", n.contains),
+			"bytes.contains", fmt.Sprintf("does not contain %x", n.contains),
 			val, protoreflect.ValueOfBytes(n.contains))
 	}
 
 	// in
 	if len(n.inVals) > 0 && !slices.ContainsFunc(n.inVals, func(v []byte) bool { return bytes.Equal(v, bytesVal) }) {
 		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.inDesc,
-			"bytes.in", "value must be in list "+formatBytesList(n.inVals),
+			"bytes.in", "must be in list "+formatBytesList(n.inVals),
 			val, protoreflect.ValueOfBytes(bytesVal))
 	}
 
 	// not_in
 	if len(n.notInVals) > 0 && slices.ContainsFunc(n.notInVals, func(v []byte) bool { return bytes.Equal(v, bytesVal) }) {
 		return n.newViolation(bytesDescs.ruleDesc, bytesDescs.notInDesc,
-			"bytes.not_in", "value must not be in list "+formatBytesList(n.notInVals),
+			"bytes.not_in", "must not be in list "+formatBytesList(n.notInVals),
 			val, protoreflect.ValueOfBytes(bytesVal))
 	}
 

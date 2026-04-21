@@ -126,7 +126,7 @@ type stringWellKnownRule struct {
 	desc        protoreflect.FieldDescriptor
 	ruleID      string // e.g. "string.ip"
 	emptyRuleID string // e.g. "string.ip_empty"; empty means skip the empty check
-	mainMsg     string // e.g. "value must be a valid IP address"
+	mainMsg     string // e.g. "must be a valid IP address"
 	emptyMsg    string // e.g. "value is empty, which is not a valid IP address"
 	validate    func(string) bool
 }
@@ -137,7 +137,7 @@ var (
 		desc:        strDescs.emailDesc,
 		ruleID:      "string.email",
 		emptyRuleID: "string.email_empty",
-		mainMsg:     "value must be a valid email address",
+		mainMsg:     "must be a valid email address",
 		emptyMsg:    "value is empty, which is not a valid email address",
 		validate:    cel.IsEmail,
 	}
@@ -145,7 +145,7 @@ var (
 		desc:        strDescs.hostNameDesc,
 		ruleID:      "string.hostname",
 		emptyRuleID: "string.hostname_empty",
-		mainMsg:     "value must be a valid hostname",
+		mainMsg:     "must be a valid hostname",
 		emptyMsg:    "value is empty, which is not a valid hostname",
 		validate:    cel.IsHostname,
 	}
@@ -153,7 +153,7 @@ var (
 		desc:        strDescs.ipDesc,
 		ruleID:      "string.ip",
 		emptyRuleID: "string.ip_empty",
-		mainMsg:     "value must be a valid IP address",
+		mainMsg:     "must be a valid IP address",
 		emptyMsg:    "value is empty, which is not a valid IP address",
 		validate:    func(s string) bool { return cel.IsIP(s, 0) },
 	}
@@ -161,7 +161,7 @@ var (
 		desc:        strDescs.ipv4Desc,
 		ruleID:      "string.ipv4",
 		emptyRuleID: "string.ipv4_empty",
-		mainMsg:     "value must be a valid IPv4 address",
+		mainMsg:     "must be a valid IPv4 address",
 		emptyMsg:    "value is empty, which is not a valid IPv4 address",
 		validate:    func(s string) bool { return cel.IsIP(s, 4) },
 	}
@@ -169,7 +169,7 @@ var (
 		desc:        strDescs.ipv6Desc,
 		ruleID:      "string.ipv6",
 		emptyRuleID: "string.ipv6_empty",
-		mainMsg:     "value must be a valid IPv6 address",
+		mainMsg:     "must be a valid IPv6 address",
 		emptyMsg:    "value is empty, which is not a valid IPv6 address",
 		validate:    func(s string) bool { return cel.IsIP(s, 6) },
 	}
@@ -177,21 +177,21 @@ var (
 		desc:        strDescs.uriDesc,
 		ruleID:      "string.uri",
 		emptyRuleID: "string.uri_empty",
-		mainMsg:     "value must be a valid URI",
+		mainMsg:     "must be a valid URI",
 		emptyMsg:    "value is empty, which is not a valid URI",
 		validate:    cel.IsURI,
 	}
 	stringRuleURIRef = stringWellKnownRule{
 		desc:     strDescs.uriRefDesc,
 		ruleID:   "string.uri_ref",
-		mainMsg:  "value must be a valid URI Reference",
+		mainMsg:  "must be a valid URI Reference",
 		validate: cel.IsURIRef,
 	}
 	stringRuleAddress = stringWellKnownRule{
 		desc:        strDescs.addressDesc,
 		ruleID:      "string.address",
 		emptyRuleID: "string.address_empty",
-		mainMsg:     "value must be a valid hostname, or ip address",
+		mainMsg:     "must be a valid hostname, or ip address",
 		emptyMsg:    "value is empty, which is not a valid hostname, or ip address",
 		validate:    func(s string) bool { return cel.IsHostname(s) || cel.IsIP(s, 0) },
 	}
@@ -199,7 +199,7 @@ var (
 		desc:        strDescs.uuidDesc,
 		ruleID:      "string.uuid",
 		emptyRuleID: "string.uuid_empty",
-		mainMsg:     "value must be a valid UUID",
+		mainMsg:     "must be a valid UUID",
 		emptyMsg:    "value is empty, which is not a valid UUID",
 		validate:    uuidRegexp.MatchString,
 	}
@@ -207,7 +207,7 @@ var (
 		desc:        strDescs.tuuidDesc,
 		ruleID:      "string.tuuid",
 		emptyRuleID: "string.tuuid_empty",
-		mainMsg:     "value must be a valid trimmed UUID",
+		mainMsg:     "must be a valid trimmed UUID",
 		emptyMsg:    "value is empty, which is not a valid trimmed UUID",
 		validate:    tuuidRegexp.MatchString,
 	}
@@ -215,7 +215,7 @@ var (
 		desc:        strDescs.ipPrefixLenDesc,
 		ruleID:      "string.ip_with_prefixlen",
 		emptyRuleID: "string.ip_with_prefixlen_empty",
-		mainMsg:     "value must be a valid IP prefix",
+		mainMsg:     "must be a valid IP prefix",
 		emptyMsg:    "value is empty, which is not a valid IP prefix",
 		validate:    func(s string) bool { return cel.IsIPPrefix(s, 0, false) },
 	}
@@ -223,7 +223,7 @@ var (
 		desc:        strDescs.ipv4PrefixLenDesc,
 		ruleID:      "string.ipv4_with_prefixlen",
 		emptyRuleID: "string.ipv4_with_prefixlen_empty",
-		mainMsg:     "value must be a valid IPv4 address with prefix length",
+		mainMsg:     "must be a valid IPv4 address with prefix length",
 		emptyMsg:    "value is empty, which is not a valid IPv4 address with prefix length",
 		validate:    func(s string) bool { return cel.IsIPPrefix(s, 4, false) },
 	}
@@ -231,7 +231,7 @@ var (
 		desc:        strDescs.ipv6PrefixLenDesc,
 		ruleID:      "string.ipv6_with_prefixlen",
 		emptyRuleID: "string.ipv6_with_prefixlen_empty",
-		mainMsg:     "value must be a valid IPv6 address with prefix length",
+		mainMsg:     "must be a valid IPv6 address with prefix length",
 		emptyMsg:    "value is empty, which is not a valid IPv6 address with prefix length",
 		validate:    func(s string) bool { return cel.IsIPPrefix(s, 6, false) },
 	}
@@ -239,7 +239,7 @@ var (
 		desc:        strDescs.ipPrefixDesc,
 		ruleID:      "string.ip_prefix",
 		emptyRuleID: "string.ip_prefix_empty",
-		mainMsg:     "value must be a valid IP prefix",
+		mainMsg:     "must be a valid IP prefix",
 		emptyMsg:    "value is empty, which is not a valid IP prefix",
 		validate:    func(s string) bool { return cel.IsIPPrefix(s, 0, true) },
 	}
@@ -247,7 +247,7 @@ var (
 		desc:        strDescs.ipv4PrefixDesc,
 		ruleID:      "string.ipv4_prefix",
 		emptyRuleID: "string.ipv4_prefix_empty",
-		mainMsg:     "value must be a valid IPv4 prefix",
+		mainMsg:     "must be a valid IPv4 prefix",
 		emptyMsg:    "value is empty, which is not a valid IPv4 prefix",
 		validate:    func(s string) bool { return cel.IsIPPrefix(s, 4, true) },
 	}
@@ -255,7 +255,7 @@ var (
 		desc:        strDescs.ipv6PrefixDesc,
 		ruleID:      "string.ipv6_prefix",
 		emptyRuleID: "string.ipv6_prefix_empty",
-		mainMsg:     "value must be a valid IPv6 prefix",
+		mainMsg:     "must be a valid IPv6 prefix",
 		emptyMsg:    "value is empty, which is not a valid IPv6 prefix",
 		validate:    func(s string) bool { return cel.IsIPPrefix(s, 6, true) },
 	}
@@ -263,7 +263,7 @@ var (
 		desc:        strDescs.hostAndPortDesc,
 		ruleID:      "string.host_and_port",
 		emptyRuleID: "string.host_and_port_empty",
-		mainMsg:     "value must be a valid host (hostname or IP address) and port pair",
+		mainMsg:     "must be a valid host (hostname or IP address) and port pair",
 		emptyMsg:    "value is empty, which is not a valid host and port pair",
 		validate:    func(s string) bool { return cel.IsHostAndPort(s, true) },
 	}
@@ -271,7 +271,7 @@ var (
 		desc:        strDescs.ulidDesc,
 		ruleID:      "string.ulid",
 		emptyRuleID: "string.ulid_empty",
-		mainMsg:     "value must be a valid ULID",
+		mainMsg:     "must be a valid ULID",
 		emptyMsg:    "value is empty, which is not a valid ULID",
 		validate:    ulidRegexp.MatchString,
 	}
@@ -327,35 +327,35 @@ func (n nativeStringEval) Evaluate(_ protoreflect.Message, val protoreflect.Valu
 	// const
 	if n.constVal != nil && strVal != *n.constVal {
 		return n.newViolation(strDescs.ruleDesc, strDescs.constDesc,
-			"string.const", fmt.Sprintf("value must equal `%s`", *n.constVal),
+			"string.const", fmt.Sprintf("must equal `%s`", *n.constVal),
 			val, protoreflect.ValueOfString(*n.constVal))
 	}
 
 	// pattern
 	if n.pattern != nil && !n.pattern.MatchString(strVal) {
 		return n.newViolation(strDescs.ruleDesc, strDescs.patternDesc,
-			"string.pattern", fmt.Sprintf("value does not match regex pattern `%s`", n.patternStr),
+			"string.pattern", fmt.Sprintf("does not match regex pattern `%s`", n.patternStr),
 			val, protoreflect.ValueOfString(n.patternStr))
 	}
 
 	// prefix
 	if n.prefix != nil && !strings.HasPrefix(strVal, *n.prefix) {
 		return n.newViolation(strDescs.ruleDesc, strDescs.prefixDesc,
-			"string.prefix", fmt.Sprintf("value does not have prefix `%s`", *n.prefix),
+			"string.prefix", fmt.Sprintf("does not have prefix `%s`", *n.prefix),
 			val, protoreflect.ValueOfString(*n.prefix))
 	}
 
 	// suffix
 	if n.suffix != nil && !strings.HasSuffix(strVal, *n.suffix) {
 		return n.newViolation(strDescs.ruleDesc, strDescs.suffixDesc,
-			"string.suffix", fmt.Sprintf("value does not have suffix `%s`", *n.suffix),
+			"string.suffix", fmt.Sprintf("does not have suffix `%s`", *n.suffix),
 			val, protoreflect.ValueOfString(*n.suffix))
 	}
 
 	// contains
 	if n.contains != nil && !strings.Contains(strVal, *n.contains) {
 		return n.newViolation(strDescs.ruleDesc, strDescs.containsDesc,
-			"string.contains", fmt.Sprintf("value does not contain substring `%s`", *n.contains),
+			"string.contains", fmt.Sprintf("does not contain substring `%s`", *n.contains),
 			val, protoreflect.ValueOfString(*n.contains))
 	}
 
@@ -369,14 +369,14 @@ func (n nativeStringEval) Evaluate(_ protoreflect.Message, val protoreflect.Valu
 	// in
 	if len(n.inVals) > 0 && !slices.Contains(n.inVals, strVal) {
 		return n.newViolation(strDescs.ruleDesc, strDescs.inDesc,
-			"string.in", "value must be in list "+formatStringList(n.inVals),
+			"string.in", "must be in list "+formatStringList(n.inVals),
 			val, protoreflect.ValueOfString(strVal))
 	}
 
 	// not_in
 	if len(n.notInVals) > 0 && slices.Contains(n.notInVals, strVal) {
 		return n.newViolation(strDescs.ruleDesc, strDescs.notInDesc,
-			"string.not_in", "value must not be in list "+formatStringList(n.notInVals),
+			"string.not_in", "must not be in list "+formatStringList(n.notInVals),
 			val, protoreflect.ValueOfString(strVal))
 	}
 
@@ -426,11 +426,11 @@ func (n nativeStringEval) checkKnownRegex(strVal string, val protoreflect.Value)
 		}
 		matcher = headerNameRegexp
 		rule = "string.well_known_regex.header_name"
-		msg = "value must be a valid HTTP header name"
+		msg = "must be a valid HTTP header name"
 	case validate.KnownRegex_KNOWN_REGEX_HTTP_HEADER_VALUE:
 		matcher = headerValueRegexp
 		rule = "string.well_known_regex.header_value"
-		msg = "value must be a valid HTTP header value"
+		msg = "must be a valid HTTP header value"
 	default:
 		return nil // should never happen, but just in case
 	}
@@ -452,17 +452,17 @@ func (n nativeStringEval) checkKnownRegex(strVal string, val protoreflect.Value)
 func (n nativeStringEval) evaluateByteLength(byteCount uint64, val protoreflect.Value) error {
 	if n.exactBytes != nil && byteCount != *n.exactBytes {
 		return n.newViolation(strDescs.ruleDesc, strDescs.lenBytesDesc,
-			"string.len_bytes", fmt.Sprintf("value length must be %d bytes", *n.exactBytes),
+			"string.len_bytes", fmt.Sprintf("must be %d bytes", *n.exactBytes),
 			val, protoreflect.ValueOfUint64(*n.exactBytes))
 	}
 	if n.minBytes != nil && byteCount < *n.minBytes {
 		return n.newViolation(strDescs.ruleDesc, strDescs.minBytesDesc,
-			"string.min_bytes", fmt.Sprintf("value length must be at least %d bytes", *n.minBytes),
+			"string.min_bytes", fmt.Sprintf("must be at least %d bytes", *n.minBytes),
 			val, protoreflect.ValueOfUint64(*n.minBytes))
 	}
 	if n.maxBytes != nil && byteCount > *n.maxBytes {
 		return n.newViolation(strDescs.ruleDesc, strDescs.maxBytesDesc,
-			"string.max_bytes", fmt.Sprintf("value length must be at most %d bytes", *n.maxBytes),
+			"string.max_bytes", fmt.Sprintf("must be at most %d bytes", *n.maxBytes),
 			val, protoreflect.ValueOfUint64(*n.maxBytes))
 	}
 	return nil
@@ -475,17 +475,17 @@ func (n nativeStringEval) evaluateByteLength(byteCount uint64, val protoreflect.
 func (n nativeStringEval) evaluateLength(runeCount uint64, val protoreflect.Value) error {
 	if n.exactLen != nil && runeCount != *n.exactLen {
 		return n.newViolation(strDescs.ruleDesc, strDescs.lenDesc,
-			"string.len", fmt.Sprintf("value length must be %d characters", *n.exactLen),
+			"string.len", fmt.Sprintf("must be %d characters", *n.exactLen),
 			val, protoreflect.ValueOfUint64(*n.exactLen))
 	}
 	if n.minLen != nil && runeCount < *n.minLen {
 		return n.newViolation(strDescs.ruleDesc, strDescs.minLenDesc,
-			"string.min_len", fmt.Sprintf("value length must be at least %d characters", *n.minLen),
+			"string.min_len", fmt.Sprintf("must be at least %d characters", *n.minLen),
 			val, protoreflect.ValueOfUint64(*n.minLen))
 	}
 	if n.maxLen != nil && runeCount > *n.maxLen {
 		return n.newViolation(strDescs.ruleDesc, strDescs.maxLenDesc,
-			"string.max_len", fmt.Sprintf("value length must be at most %d characters", *n.maxLen),
+			"string.max_len", fmt.Sprintf("must be at most %d characters", *n.maxLen),
 			val, protoreflect.ValueOfUint64(*n.maxLen))
 	}
 	return nil

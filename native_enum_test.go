@@ -41,7 +41,7 @@ func TestNativeEnumConst(t *testing.T) {
 	require.ErrorAs(t, err, &valErr)
 	require.Len(t, valErr.Violations, 1)
 	assert.Equal(t, "enum.const", valErr.Violations[0].Proto.GetRuleId())
-	assert.Equal(t, "value must equal 1", valErr.Violations[0].Proto.GetMessage())
+	assert.Equal(t, "must equal 1", valErr.Violations[0].Proto.GetMessage())
 }
 
 func TestNativeEnumIn(t *testing.T) {

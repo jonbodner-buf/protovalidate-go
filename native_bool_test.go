@@ -38,7 +38,7 @@ func TestNativeBoolConst_True(t *testing.T) {
 	require.ErrorAs(t, err, &valErr)
 	require.Len(t, valErr.Violations, 1)
 	assert.Equal(t, "bool.const", valErr.Violations[0].Proto.GetRuleId())
-	assert.Equal(t, "value must equal true", valErr.Violations[0].Proto.GetMessage())
+	assert.Equal(t, "must equal true", valErr.Violations[0].Proto.GetMessage())
 }
 
 func TestNativeBoolConst_False(t *testing.T) {
@@ -52,7 +52,7 @@ func TestNativeBoolConst_False(t *testing.T) {
 	require.Error(t, err)
 	var valErr *ValidationError
 	require.ErrorAs(t, err, &valErr)
-	assert.Equal(t, "value must equal false", valErr.Violations[0].Proto.GetMessage())
+	assert.Equal(t, "must equal false", valErr.Violations[0].Proto.GetMessage())
 }
 
 func TestTryBuildNativeBoolRules_ReturnsNil(t *testing.T) {

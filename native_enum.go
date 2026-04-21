@@ -42,21 +42,21 @@ func (n nativeEnumEval) Evaluate(_ protoreflect.Message, val protoreflect.Value,
 	// const
 	if n.constVal != nil && enumVal != *n.constVal {
 		return n.newViolation(enumRuleDescriptor, enumConstDesc,
-			"enum.const", fmt.Sprintf("value must equal %d", *n.constVal),
+			"enum.const", fmt.Sprintf("must equal %d", *n.constVal),
 			val, protoreflect.ValueOfInt32(*n.constVal))
 	}
 
 	// in
 	if len(n.inVals) > 0 && !slices.Contains(n.inVals, enumVal) {
 		return n.newViolation(enumRuleDescriptor, enumInDesc,
-			"enum.in", "value must be in list "+formatList(n.inVals),
+			"enum.in", "must be in list "+formatList(n.inVals),
 			val, protoreflect.ValueOfInt32(enumVal))
 	}
 
 	// not_in
 	if len(n.notInVals) > 0 && slices.Contains(n.notInVals, enumVal) {
 		return n.newViolation(enumRuleDescriptor, enumNotInDesc,
-			"enum.not_in", "value must not be in list "+formatList(n.notInVals),
+			"enum.not_in", "must not be in list "+formatList(n.notInVals),
 			val, protoreflect.ValueOfInt32(enumVal))
 	}
 
